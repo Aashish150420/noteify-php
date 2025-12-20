@@ -2,10 +2,10 @@
 header('Content-Type: application/json');
 include("../config/db.php");
 
-$result = $conn->query("SELECT n.*, u.name as author_name FROM notes n LEFT JOIN users u ON n.uploaded_by = u.user_id ORDER BY n.created_at DESC");
+$result = mysqli_query($conn, "SELECT n.*, u.name as author_name FROM notes n LEFT JOIN users u ON n.uploaded_by = u.user_id ORDER BY n.created_at DESC");
 $notes = [];
 if ($result) {
-    while ($row = $result->fetch_assoc()) {
+    while ($row = mysqli_fetch_assoc($result)) {
         $notes[] = $row;
     }
 } else {
@@ -15,5 +15,5 @@ if ($result) {
 }
 
 echo json_encode($notes);
-$conn->close();
+mysqli_close($conn);
 ?>

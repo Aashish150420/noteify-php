@@ -55,31 +55,31 @@ $relativePath = "uploads/" . $fileName; // Path relative to project root for dat
 // Move uploaded file
 if (move_uploaded_file($file['tmp_name'], $target)) {
     // Escape strings for SQL (basic protection)
-    $title = $conn->real_escape_string($title);
-    $description = $conn->real_escape_string($description);
-    $course = $conn->real_escape_string($course);
-    $type = $conn->real_escape_string($type);
+    $title = mysqli_real_escape_string($conn, $title);
+    $description = mysqli_real_escape_string($conn, $description);
+    $course = mysqli_real_escape_string($conn, $course);
+    $type = mysqli_real_escape_string($conn, $type);
     
     // Insert into database (store relative path)
-    $relativePathEscaped = $conn->real_escape_string($relativePath);
+    $relativePathEscaped = mysqli_real_escape_string($conn, $relativePath);
     $sql = "INSERT INTO notes (title, description, course, type, year, file_path, uploaded_by)
             VALUES ('$title', '$description', '$course', '$type', $year, '$relativePathEscaped', $uploaded_by)";
     
-    if ($conn->query($sql)) {
+    if (mysqli_query($conn, $sql)) {
         echo json_encode([
             "message" => "File uploaded successfully",
-            "note_id" => $conn->insert_id
+            "note_id" => mysqli_insert_id($conn)
         ]);
     } else {
         // Delete uploaded file if database insert fails
         unlink($target);
         http_response_code(500);
-        echo json_encode(["error" => "Database insert failed: " . $conn->error]);
+        echo json_encode(["error" => "Database insert failed: " . mysqli_error($conn)]);
     }
 } else {
     http_response_code(500);
     echo json_encode(["error" => "Failed to move uploaded file"]);
 }
 
-$conn->close();
+mysqli_close($conn);
 ?>

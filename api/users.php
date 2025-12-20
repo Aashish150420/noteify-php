@@ -2,10 +2,10 @@
 header('Content-Type: application/json');
 include("../config/db.php");
 
-$result = $conn->query("SELECT user_id, name, email, role FROM users");
+$result = mysqli_query($conn, "SELECT user_id, name, email, role FROM users");
 $users = [];
 if ($result) {
-    while ($row = $result->fetch_assoc()) {
+    while ($row = mysqli_fetch_assoc($result)) {
         $users[] = $row;
     }
 } else {
@@ -15,5 +15,5 @@ if ($result) {
 }
 
 echo json_encode($users);
-$conn->close();
+mysqli_close($conn);
 ?>
