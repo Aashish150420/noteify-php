@@ -4,12 +4,12 @@ const ROOM_COLORS = [
     '#06b6d4', '#ef4444', '#84cc16', '#f43f5e', '#14b8a6'
 ];
 
-const CATEGORY_EMOJIS = {
-    homework: '📝',
-    exams: '📊',
-    discussion: '💭',
-    projects: '🚀',
-    general: '💬'
+const CATEGORY_ICONS = {
+    homework: '<i class="fa-solid fa-pencil"></i>',
+    exams: '<i class="fa-solid fa-chart-column"></i>',
+    discussion: '<i class="fa-regular fa-comments"></i>',
+    projects: '<i class="fa-solid fa-rocket"></i>',
+    general: '<i class="fa-regular fa-comment-dots"></i>'
 };
 
 // State
@@ -236,31 +236,31 @@ function renderResources() {
             <div class="resource-header">
                 <span class="resource-type ${resource.type}">${getTypeIcon(resource.type)} ${getTypeLabel(resource.type)}</span>
                 <h3 class="resource-title">${resource.title}</h3>
-                <p class="resource-course">🎓 ${resource.course}</p>
+                <p class="resource-course"><i class="fa-solid fa-graduation-cap"></i> ${resource.course}</p>
             </div>
             <div class="resource-body">
                 <p class="resource-description">${resource.description}</p>
                 <div class="resource-meta">
-                    <span>📅 ${resource.year}</span>
-                    <span>👁️ ${resource.views} views</span>
-                    <span>⬇️ ${resource.downloads} downloads</span>
+                    <span><i class="fa-regular fa-calendar-days"></i> ${resource.year}</span>
+                    <span><i class="fa-regular fa-eye"></i> ${resource.views} views</span>
+                    <span><i class="fa-solid fa-download"></i> ${resource.downloads} downloads</span>
                 </div>
                 <div class="resource-footer">
                     ${
                         fileUrl
                             ? `
                     <a class="btn btn-secondary" href="${fileUrl}" target="_blank">
-                        👁️ View
+                        <i class="fa-regular fa-eye"></i> View
                     </a>
                     <a class="btn btn-primary" href="${fileUrl}" download>
-                        ⬇️ Download
+                        <i class="fa-solid fa-download"></i> Download
                     </a>`
                             : `
                     <button class="btn btn-secondary" disabled>
-                        👁️ View
+                        <i class="fa-regular fa-eye"></i> View
                     </button>
                     <button class="btn btn-primary" disabled>
-                        ⬇️ Download
+                        <i class="fa-solid fa-download"></i> Download
                     </button>`
                     }
                 </div>
@@ -276,12 +276,12 @@ function renderResources() {
 
 function getTypeIcon(type) {
     const icons = {
-        notes: '📝',
-        pastpaper: '📋',
-        tutorial: '💡',
-        reference: '📚'
+        notes: '<i class="fa-regular fa-file-lines"></i>',
+        pastpaper: '<i class="fa-regular fa-clipboard"></i>',
+        tutorial: '<i class="fa-regular fa-lightbulb"></i>',
+        reference: '<i class="fa-solid fa-book"></i>'
     };
-    return icons[type] || '📄';
+    return icons[type] || '<i class="fa-regular fa-file"></i>';
 }
 
 function getTypeLabel(type) {
@@ -299,7 +299,7 @@ function viewResource(id) {
     if (!resource) return;
 
     if (!resource.file_path) {
-        alert(`📖 Viewing: ${resource.title}\n\nFile not available.`);
+        alert(`Viewing: ${resource.title}\n\nFile not available.`);
         return;
     }
 
@@ -317,7 +317,7 @@ function downloadResource(id) {
     if (!resource) return;
 
     if (!resource.file_path) {
-        alert(`⬇️ Downloading: ${resource.title}\n\nFile not available.`);
+        alert(`Downloading: ${resource.title}\n\nFile not available.`);
         return;
     }
 
@@ -375,15 +375,15 @@ async function handleUpload() {
         
         if (response.ok && result.message) {
             closeUploadModal();
-            alert('✅ Resource uploaded successfully!');
+            alert('Resource uploaded successfully!');
             // Reload notes from API
             loadNotesFromAPI();
         } else {
-            alert('❌ Upload failed: ' + (result.error || 'Unknown error'));
+            alert('Upload failed: ' + (result.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('Upload error:', error);
-        alert('❌ Upload failed: ' + error.message);
+        alert('Upload failed: ' + error.message);
     }
 }
 
@@ -407,18 +407,18 @@ function renderForumPosts(category = 'all') {
                     <img src="${post.authorAvatar}" alt="${post.author}" class="user-avatar-small">
                     <div class="post-user-details">
                         <span class="post-author">${post.author}</span>
-                        <span class="post-time">⏱️ ${post.time}</span>
+                        <span class="post-time"><i class="fa-regular fa-clock"></i> ${post.time}</span>
                     </div>
                 </div>
                 <span class="category-badge ${post.category}">
-                    ${CATEGORY_EMOJIS[post.category]} ${post.category}
+                    ${CATEGORY_ICONS[post.category] || ''} ${post.category}
                 </span>
             </div>
             <h3 class="post-title">${post.title}</h3>
             <p class="post-content">${post.content}</p>
             <div class="post-footer">
-                <span class="post-stat">💬 ${post.replies} replies</span>
-                <span class="post-stat">❤️ ${post.likes} likes</span>
+                <span class="post-stat"><i class="fa-regular fa-comment-dots"></i> ${post.replies} replies</span>
+                <span class="post-stat"><i class="fa-regular fa-heart"></i> ${post.likes} likes</span>
             </div>
         </div>
     `).join('');
@@ -456,7 +456,7 @@ function handleCreatePost() {
     forumPosts.unshift(newPost);
     closePostModal();
     renderForumPosts();
-    alert('✅ Post created successfully!');
+    alert('Post created successfully!');
 }
 
 function openPostDetail(id) {
@@ -468,7 +468,7 @@ function openPostDetail(id) {
     document.getElementById('post-detail-avatar').src = currentPost.authorAvatar;
     document.getElementById('post-detail-author').textContent = currentPost.author;
     document.getElementById('post-detail-time').textContent = currentPost.time;
-    document.getElementById('post-detail-category').textContent = `${CATEGORY_EMOJIS[currentPost.category]} ${currentPost.category}`;
+    document.getElementById('post-detail-category').innerHTML = `${CATEGORY_ICONS[currentPost.category] || ''} ${currentPost.category}`;
     document.getElementById('post-detail-category').className = `category-badge ${currentPost.category}`;
     document.getElementById('post-detail-content').textContent = currentPost.content;
     
@@ -505,7 +505,7 @@ function renderComments() {
             <div class="comment-header">
                 <img src="${comment.avatar}" alt="${comment.author}">
                 <span class="comment-author">${comment.author}</span>
-                <span class="comment-time">⏱️ ${comment.time}</span>
+                <span class="comment-time"><i class="fa-regular fa-clock"></i> ${comment.time}</span>
             </div>
             <p class="comment-text">${comment.text}</p>
         </div>
@@ -519,7 +519,7 @@ function handleAddComment() {
         return;
     }
     
-    alert('✅ Comment added successfully!');
+    alert('Comment added successfully!');
     document.getElementById('comment-input').value = '';
     renderComments();
 }
@@ -551,15 +551,15 @@ function createRoomCard(room) {
                 <div>
                     <h3 class="room-name">${room.name}</h3>
                     <span class="room-status ${isFull ? 'full' : 'active'}">
-                        ${isFull ? '🔴 Full' : '🟢 Active'}
+                        ${isFull ? '<i class="fa-solid fa-circle-xmark"></i> Full' : '<i class="fa-solid fa-circle-check"></i> Active'}
                     </span>
                 </div>
             </div>
             <p class="room-description">${room.description}</p>
             <div class="room-info">
-                <span>👥 ${room.currentParticipants}/${room.maxParticipants}</span>
-                <span>⏱️ ${timeRemaining}</span>
-                <span>🔒 ${room.privacy === 'public' ? 'Public' : 'Private'}</span>
+                <span><i class="fa-solid fa-user-group"></i> ${room.currentParticipants}/${room.maxParticipants}</span>
+                <span><i class="fa-regular fa-clock"></i> ${timeRemaining}</span>
+                <span><i class="fa-solid fa-lock"></i> ${room.privacy === 'public' ? 'Public' : 'Private'}</span>
             </div>
             <div class="room-participants">
                 ${room.participants.slice(0, 3).map(p => 
@@ -568,8 +568,8 @@ function createRoomCard(room) {
                 ${room.participants.length > 3 ? `<span style="margin-left: 0.5rem;">+${room.participants.length - 3} more</span>` : ''}
             </div>
             <div class="room-footer">
-                ${!isFull ? `<button class="btn btn-primary" onclick="joinRoom(${room.id})">🚪 Join Room</button>` : ''}
-                <button class="btn btn-secondary" onclick="viewRoomDetails(${room.id})">👁️ View</button>
+                ${!isFull ? `<button class="btn btn-primary" onclick="joinRoom(${room.id})"><i class="fa-solid fa-door-open"></i> Join Room</button>` : ''}
+                <button class="btn btn-secondary" onclick="viewRoomDetails(${room.id})"><i class="fa-regular fa-eye"></i> View</button>
             </div>
         </div>
     `;
@@ -659,13 +659,13 @@ function handleCreateRoom() {
     rooms.unshift(newRoom);
     closeRoomModal();
     renderRooms();
-    alert('✅ Room created successfully!');
+    alert('Room created successfully!');
 }
 
 function joinRoom(id) {
     const room = rooms.find(r => r.id === id);
     if (!room) {
-        alert('❌ Room not found!');
+        alert('Room not found!');
         return;
     }
     
@@ -677,13 +677,13 @@ function joinRoom(id) {
     }
     
     if (room.currentParticipants >= room.maxParticipants) {
-        alert('❌ This room is full!');
+        alert('This room is full!');
         return;
     }
     
     // Check if room expired
     if (room.expiresAt <= Date.now()) {
-        alert('❌ This room has expired!');
+        alert('This room has expired!');
         return;
     }
     
@@ -695,13 +695,13 @@ function joinRoom(id) {
     
     renderRooms();
     openChatRoom(id);
-    alert('✅ Successfully joined the room!');
+    alert('Successfully joined the room!');
 }
 
 function viewRoomDetails(id) {
     const room = rooms.find(r => r.id === id);
     if (!room) {
-        alert('❌ Room not found!');
+        alert('Room not found!');
         return;
     }
     openChatRoom(id);
@@ -710,13 +710,13 @@ function viewRoomDetails(id) {
 function openChatRoom(id) {
     currentRoom = rooms.find(r => r.id === id);
     if (!currentRoom) {
-        alert('❌ Room not found!');
+        alert('Room not found!');
         return;
     }
     
     // Check if room expired
     if (currentRoom.expiresAt <= Date.now()) {
-        alert('❌ This room has expired!');
+        alert('This room has expired!');
         return;
     }
     
@@ -842,7 +842,7 @@ function saveProfile() {
     updateProfileDisplay();
     renderUserContributions();
     
-    alert('✅ Profile updated successfully!');
+    alert('Profile updated successfully!');
 }
 
 function changeAvatar() {
@@ -868,7 +868,7 @@ function renderUserContributions() {
             <span class="resource-type ${resource.type}">${getTypeIcon(resource.type)}</span>
             <h4>${resource.title}</h4>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                👁️ ${resource.views} views • ⬇️ ${resource.downloads} downloads
+                <i class="fa-regular fa-eye"></i> ${resource.views} views • <i class="fa-solid fa-download"></i> ${resource.downloads} downloads
             </p>
         </div>
     `).join('');
