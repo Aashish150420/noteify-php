@@ -28,6 +28,34 @@ let userProfile = {
     avatar: 'https://ui-avatars.com/api/?name=Student+User&background=a855f7&color=fff&size=200'
 };
 
+const USER_PROFILE_STORAGE_KEY = 'noteify_user_profile';
+
+// Load profile from localStorage (if present) so avatar/name persist on reload
+try {
+    const storedProfile = localStorage.getItem(USER_PROFILE_STORAGE_KEY);
+    if (storedProfile) {
+        const parsed = JSON.parse(storedProfile);
+        userProfile = { ...userProfile, ...parsed };
+    }
+} catch (e) {
+    console.error('Failed to load stored profile:', e);
+}
+
+function persistUserProfile() {
+    try {
+        const toStore = {
+            name: userProfile.name,
+            course: userProfile.course,
+            year: userProfile.year,
+            bio: userProfile.bio,
+            avatar: userProfile.avatar
+        };
+        localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(toStore));
+    } catch (e) {
+        console.error('Failed to persist profile:', e);
+    }
+}
+
 // Mock chat messages
 let chatMessages = [];
 let chatInterval = null;
@@ -55,20 +83,26 @@ async function loadNotesFromAPI() {
         const data = await response.json();
         
         // Map API data to frontend format
-        resources = data.map(note => ({
-            id: note.note_id,
-            title: note.title,
-            description: note.description || '',
-            course: note.course || '',
-            type: note.type || 'notes',
-            year: note.year || new Date().getFullYear(),
-            author: note.author_name || 'Unknown',
-            authorAvatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(note.author_name || 'User')}&background=a855f7&color=fff`,
-            downloads: note.downloads || 0,
-            views: note.views || 0,
-            date: note.created_at ? note.created_at.split(' ')[0] : new Date().toISOString().split('T')[0],
-            file_path: note.file_path
-        }));
+        resources = data.map(note => {
+            const authorName = note.author_name || 'Unknown';
+            const isCurrentUser = authorName === userProfile.name;
+            return {
+                id: note.note_id,
+                title: note.title,
+                description: note.description || '',
+                course: note.course || '',
+                type: note.type || 'notes',
+                year: note.year || new Date().getFullYear(),
+                author: authorName,
+                authorAvatar: isCurrentUser
+                    ? userProfile.avatar
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName || 'User')}&background=a855f7&color=fff`,
+                downloads: note.downloads || 0,
+                views: note.views || 0,
+                date: note.created_at ? note.created_at.split(' ')[0] : new Date().toISOString().split('T')[0],
+                file_path: note.file_path
+            };
+        });
         
         renderResources();
         // Update profile stats if profile page is visible
@@ -801,6 +835,10 @@ function initializeProfile() {
     
     document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
     document.getElementById('change-avatar-btn').addEventListener('click', changeAvatar);
+    const avatarInput = document.getElementById('avatar-file');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', handleAvatarFileChange);
+    }
     
     renderUserContributions();
 }
@@ -812,6 +850,31 @@ function updateProfileDisplay() {
     document.getElementById('edit-year').value = userProfile.year;
     document.getElementById('edit-bio').value = userProfile.bio;
     document.getElementById('profile-avatar').src = userProfile.avatar;
+    
+    // Header chips + bio
+    const courseEl = document.getElementById('profile-course');
+    const yearEl = document.getElementById('profile-year');
+    const bioEl = document.getElementById('profile-bio');
+
+    if (courseEl) {
+        courseEl.innerHTML = `<i class="fa-solid fa-graduation-cap"></i> ${userProfile.course || 'Add your course'}`;
+    }
+
+    if (yearEl) {
+        const yearMap = {
+            '1': '1st Year',
+            '2': '2nd Year',
+            '3': '3rd Year',
+            '4': '4th Year',
+            graduate: 'Graduate'
+        };
+        const label = yearMap[userProfile.year] || 'Year not set';
+        yearEl.innerHTML = `<i class="fa-regular fa-calendar-days"></i> ${label}`;
+    }
+
+    if (bioEl) {
+        bioEl.textContent = userProfile.bio || 'Add a short bio to let others know who you are.';
+    }
     
     // Update navbar avatar and name
     const navAvatar = document.querySelector('.user-avatar-small');
@@ -841,16 +904,77 @@ function saveProfile() {
     
     updateProfileDisplay();
     renderUserContributions();
+    persistUserProfile();
     
     alert('Profile updated successfully!');
 }
 
 function changeAvatar() {
-    const name = prompt('Enter your name for avatar generation:', userProfile.name);
-    if (name) {
-        userProfile.name = name;
-        userProfile.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=a855f7&color=fff&size=200`;
+    const input = document.getElementById('avatar-file');
+    if (input) {
+        input.click();
+    }
+}
+
+async function handleAvatarFileChange(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        event.target.value = '';
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+        alert('Image must be 5MB or smaller');
+        event.target.value = '';
+        return;
+    }
+
+    // Optional: quick preview while uploading
+    const reader = new FileReader();
+    reader.onload = () => {
+        const img = document.getElementById('profile-avatar');
+        if (img) img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('../api/avatar.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.url) {
+            throw new Error(result.error || 'Upload failed');
+        }
+
+        // Build a relative URL from frontend/ to uploaded avatar
+        const avatarUrl = `../${String(result.url).replace(/^\/+/, '')}`;
+
+        userProfile.avatar = avatarUrl;
+        persistUserProfile();
+
+        // Update any resources authored by this user to use the new avatar
+        resources = resources.map(r =>
+            r.author === userProfile.name ? { ...r, authorAvatar: userProfile.avatar } : r
+        );
+
         updateProfileDisplay();
+        renderResources();
+        renderUserContributions();
+        alert('Avatar updated successfully!');
+    } catch (err) {
+        console.error('Avatar upload error:', err);
+        alert('Failed to upload avatar: ' + err.message);
+    } finally {
+        event.target.value = '';
     }
 }
 

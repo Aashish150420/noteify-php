@@ -200,10 +200,18 @@
                         <div class="profile-avatar-section">
                             <img id="profile-avatar" src="https://ui-avatars.com/api/?name=Student+User&background=a855f7&color=fff&size=200" alt="Profile" class="profile-avatar">
                             <button class="btn btn-secondary" id="change-avatar-btn"><i class="fa-solid fa-camera"></i> Change Avatar</button>
+                            <input type="file" id="avatar-file" accept="image/*" style="display: none;">
                         </div>
                         <div class="profile-info-section">
                             <h2 id="profile-display-name">Student User</h2>
                             <p class="profile-email">student@university.edu</p>
+                            <div class="profile-tags">
+                                <span class="profile-tag" id="profile-course"><i class="fa-solid fa-graduation-cap"></i> Computer Science</span>
+                                <span class="profile-tag" id="profile-year"><i class="fa-regular fa-calendar-days"></i> 3rd Year</span>
+                            </div>
+                            <p class="profile-bio" id="profile-bio">
+                                Passionate about learning and sharing knowledge with fellow students.
+                            </p>
                             <div class="profile-stats">
                                 <div class="stat-item">
                                     <span class="stat-value">0</span>
