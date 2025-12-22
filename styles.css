@@ -92,8 +92,8 @@ body {
     padding: 20px;
     border-radius: 6px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    width: 500px;          /* 🔥 REQUIRED */
-    z-index: 1000;         /* 🔥 REQUIRED */
+    width: 500px;          
+    z-index: 1000;
 }
 .modal.active {
     display: block;
