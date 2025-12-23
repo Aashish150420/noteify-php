@@ -19,6 +19,7 @@ let forumPosts = [];
 let rooms = [];
 let currentRoom = null;
 let currentPost = null;
+let currentComments = [];
 let userProfile = {
     name: 'Student User',
     email: 'student@university.edu',
@@ -67,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeFilters();
     initializeProfile();
     loadNotesFromAPI();
-    renderForumPosts();
+    loadForumPostsFromAPI();
     renderRooms();
     updateRoomTimers();
     setInterval(updateRoomTimers, 60000); // Update timers every minute
@@ -158,6 +159,11 @@ function switchPage(page) {
     if (page === 'profile') {
         updateProfileDisplay();
         renderUserContributions();
+    }
+    
+    // Reload forum posts when switching to forum page
+    if (page === 'forum') {
+        loadForumPostsFromAPI();
     }
 }
 
@@ -422,6 +428,27 @@ async function handleUpload() {
 }
 
 // Forum
+async function loadForumPostsFromAPI() {
+    try {
+        const response = await fetch('../api/forum.php');
+        if (!response.ok) {
+            throw new Error('Failed to fetch forum posts: ' + response.status);
+        }
+        const data = await response.json();
+
+        // Expect API to already return in the shape renderForumPosts uses
+        forumPosts = Array.isArray(data) ? data : [];
+        console.log('Loaded forum posts:', forumPosts.length);
+        renderForumPosts();
+    } catch (error) {
+        console.error('Error loading forum posts:', error);
+        const container = document.getElementById('forum-posts');
+        if (container) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 3rem;">Failed to load forum posts. Please check console for details.</p>';
+        }
+    }
+}
+
 function renderForumPosts(category = 'all') {
     let filtered = category === 'all' 
         ? forumPosts 
@@ -429,8 +456,13 @@ function renderForumPosts(category = 'all') {
     
     const container = document.getElementById('forum-posts');
     
+    if (!container) {
+        console.error('Forum posts container not found!');
+        return;
+    }
+    
     if (filtered.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 3rem;">No posts in this category yet.</p>';
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 3rem;">No posts in this category yet. Be the first to create a post!</p>';
         return;
     }
     
@@ -438,7 +470,7 @@ function renderForumPosts(category = 'all') {
         <div class="forum-post" onclick="openPostDetail(${post.id})">
             <div class="post-header">
                 <div class="post-user-info">
-                    <img src="${post.authorAvatar}" alt="${post.author}" class="user-avatar-small">
+                    <img src="${getForumAvatar(post.author, post.authorAvatar)}" alt="${post.author}" class="user-avatar-small">
                     <div class="post-user-details">
                         <span class="post-author">${post.author}</span>
                         <span class="post-time"><i class="fa-regular fa-clock"></i> ${post.time}</span>
@@ -452,7 +484,6 @@ function renderForumPosts(category = 'all') {
             <p class="post-content">${post.content}</p>
             <div class="post-footer">
                 <span class="post-stat"><i class="fa-regular fa-comment-dots"></i> ${post.replies} replies</span>
-                <span class="post-stat"><i class="fa-regular fa-heart"></i> ${post.likes} likes</span>
             </div>
         </div>
     `).join('');
@@ -464,7 +495,7 @@ function closePostModal() {
     document.getElementById('post-content').value = '';
 }
 
-function handleCreatePost() {
+async function handleCreatePost() {
     const title = document.getElementById('post-title').value;
     const content = document.getElementById('post-content').value;
     const category = document.getElementById('post-category').value;
@@ -474,23 +505,38 @@ function handleCreatePost() {
         return;
     }
     
-    const newPost = {
-        id: forumPosts.length + 1,
+    const payload = {
         title,
         content,
         category,
         author: userProfile.name,
-        authorAvatar: userProfile.avatar,
-        time: 'Just now',
-        replies: 0,
-        likes: 0,
-        timestamp: Date.now()
+        authorAvatar: userProfile.avatar
     };
-    
-    forumPosts.unshift(newPost);
-    closePostModal();
-    renderForumPosts();
-    alert('Post created successfully!');
+
+    try {
+        const response = await fetch('../api/forum.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.post) {
+            throw new Error(result.error || 'Failed to create post');
+        }
+
+        // Add the new post to the top of the list and re-render
+        forumPosts.unshift(result.post);
+        closePostModal();
+        renderForumPosts();
+        alert('Post created successfully!');
+    } catch (error) {
+        console.error('Error creating post:', error);
+        alert('Failed to create post: ' + error.message);
+    }
 }
 
 function openPostDetail(id) {
@@ -499,14 +545,14 @@ function openPostDetail(id) {
     
     document.getElementById('post-detail-modal').classList.add('active');
     document.getElementById('post-detail-title').textContent = currentPost.title;
-    document.getElementById('post-detail-avatar').src = currentPost.authorAvatar;
+    document.getElementById('post-detail-avatar').src = getForumAvatar(currentPost.author, currentPost.authorAvatar);
     document.getElementById('post-detail-author').textContent = currentPost.author;
     document.getElementById('post-detail-time').textContent = currentPost.time;
     document.getElementById('post-detail-category').innerHTML = `${CATEGORY_ICONS[currentPost.category] || ''} ${currentPost.category}`;
     document.getElementById('post-detail-category').className = `category-badge ${currentPost.category}`;
     document.getElementById('post-detail-content').textContent = currentPost.content;
     
-    renderComments();
+    loadCommentsForCurrentPost();
 }
 
 function closePostDetailModal() {
@@ -514,30 +560,38 @@ function closePostDetailModal() {
     currentPost = null;
 }
 
-function renderComments() {
-    // Mock comments
-    const comments = [
-        {
-            author: 'Helpful Student',
-            avatar: 'https://ui-avatars.com/api/?name=Helpful+Student&background=10b981&color=fff',
-            time: '1 hour ago',
-            text: 'Great question! I found that practicing past papers really helped me prepare.'
-        },
-        {
-            author: 'Study Buddy',
-            avatar: 'https://ui-avatars.com/api/?name=Study+Buddy&background=3b82f6&color=fff',
-            time: '30 minutes ago',
-            text: 'Focus on the topics that were covered most in class. Also, make sure to understand the concepts, not just memorize.'
+async function loadCommentsForCurrentPost() {
+    if (!currentPost) return;
+
+    try {
+        const response = await fetch(`../api/comments.php?post_id=${currentPost.id}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch comments');
         }
-    ];
-    
+        const data = await response.json();
+        currentComments = Array.isArray(data) ? data : [];
+        renderComments();
+    } catch (error) {
+        console.error('Error loading comments:', error);
+        currentComments = [];
+        renderComments();
+    }
+}
+
+function renderComments() {
+    const comments = currentComments || [];
     document.getElementById('comment-count').textContent = comments.length;
     
     const container = document.getElementById('comments-list');
+    if (comments.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary);">No comments yet. Be the first to comment!</p>';
+        return;
+    }
+
     container.innerHTML = comments.map(comment => `
         <div class="comment-item">
             <div class="comment-header">
-                <img src="${comment.avatar}" alt="${comment.author}">
+                <img src="${getForumAvatar(comment.author, comment.authorAvatar)}" alt="${comment.author}">
                 <span class="comment-author">${comment.author}</span>
                 <span class="comment-time"><i class="fa-regular fa-clock"></i> ${comment.time}</span>
             </div>
@@ -546,16 +600,71 @@ function renderComments() {
     `).join('');
 }
 
-function handleAddComment() {
-    const commentText = document.getElementById('comment-input').value;
+async function handleAddComment() {
+    if (!currentPost) {
+        alert('No post selected');
+        return;
+    }
+
+    const commentInput = document.getElementById('comment-input');
+    const commentText = commentInput.value.trim();
     if (!commentText) {
         alert('Please write a comment');
         return;
     }
     
-    alert('Comment added successfully!');
-    document.getElementById('comment-input').value = '';
-    renderComments();
+    const payload = {
+        post_id: currentPost.id,
+        text: commentText,
+        author: userProfile.name,
+        authorAvatar: userProfile.avatar
+    };
+
+    try {
+        const response = await fetch('../api/comments.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.comment) {
+            throw new Error(result.error || 'Failed to add comment');
+        }
+
+        // Use the server-returned comment so time formatting matches
+        currentComments.push(result.comment);
+        commentInput.value = '';
+        renderComments();
+
+        // Also update replies count on the current post + list
+        currentPost.replies = (currentPost.replies || 0) + 1;
+        const idx = forumPosts.findIndex(p => p.id === currentPost.id);
+        if (idx !== -1) {
+            forumPosts[idx].replies = currentPost.replies;
+            renderForumPosts(document.querySelector('.category-chip.active')?.dataset.category || 'all');
+        }
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        alert('Failed to add comment: ' + error.message);
+    }
+}
+
+// Helper to determine which avatar URL to show in forum/posts/comments
+function getForumAvatar(authorName, storedAvatar) {
+    // Always show the CURRENT profile avatar for the logged-in user
+    if (authorName && authorName === userProfile.name) {
+        return userProfile.avatar;
+    }
+    // For other users, if we have a stored avatar from DB, use it directly
+    if (storedAvatar && storedAvatar.trim() !== '') {
+        return storedAvatar;
+    }
+    // Fallback: auto-generated avatar based on author name
+    const name = authorName || 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=a855f7&color=fff`;
 }
 
 // Study Rooms
@@ -966,8 +1075,18 @@ async function handleAvatarFileChange(event) {
             r.author === userProfile.name ? { ...r, authorAvatar: userProfile.avatar } : r
         );
 
+        // Update any forum posts/comments authored by this user in the current session
+        forumPosts = forumPosts.map(p =>
+            p.author === userProfile.name ? { ...p, authorAvatar: userProfile.avatar } : p
+        );
+        currentComments = currentComments.map(c =>
+            c.author === userProfile.name ? { ...c, authorAvatar: userProfile.avatar } : c
+        );
+
         updateProfileDisplay();
         renderResources();
+        renderForumPosts();
+        renderComments();
         renderUserContributions();
         alert('Avatar updated successfully!');
     } catch (err) {

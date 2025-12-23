@@ -4,14 +4,8 @@ include("../config/db.php");
 
 $result = mysqli_query($conn, "SELECT n.*, u.name as author_name FROM notes n LEFT JOIN users u ON n.uploaded_by = u.user_id ORDER BY n.created_at DESC");
 $notes = [];
-if ($result) {
-    while ($row = mysqli_fetch_assoc($result)) {
-        $notes[] = $row;
-    }
-} else {
-    http_response_code(500);
-    echo json_encode(["error" => "Database query failed"]);
-    exit;
+while ($row = mysqli_fetch_assoc($result)) {
+    $notes[] = $row;
 }
 
 echo json_encode($notes);

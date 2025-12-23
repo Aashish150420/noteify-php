@@ -13,6 +13,28 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Forum posts table
+CREATE TABLE IF NOT EXISTS forum_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    category VARCHAR(50) DEFAULT 'general',
+    author_name VARCHAR(100) NOT NULL,
+    author_avatar VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Forum comments table
+CREATE TABLE IF NOT EXISTS forum_comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT NOT NULL,
+    author_name VARCHAR(100) NOT NULL,
+    author_avatar VARCHAR(500),
+    text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES forum_posts(id) ON DELETE CASCADE
+);
+
 -- Notes table
 CREATE TABLE IF NOT EXISTS notes (
     note_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,10 +51,4 @@ CREATE TABLE IF NOT EXISTS notes (
     FOREIGN KEY (uploaded_by) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
--- Insert sample users
-INSERT INTO users (name, email, role) VALUES
-('Student User', 'student@university.edu', 'student'),
-('Saurav Patel', 'saurav@example.com', 'student'),
-('Sujan Ghimire', 'sujan@example.com', 'student'),
-('Priya Singh', 'priya@example.com', 'student');
 
