@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/loginregistercss.css">
+<title>NOTEIFY Login</title>
+</head>
+<body>
+<nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon"><i class="fa-solid fa-book"></i></span>
+                <span class="brand-name">NOTEIFY</span>
+            </div>
+        </div>
+    </nav>
+<div class="form-container">
+      <div class="page-header">
+        <h1 class="page-header">Login to Your Account</h1>
+    </div>
+  <form action="/login" method="POST">
+    <div class="form-group">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Login</button>
+    <button type="button" onclick="window.location.href='register.html'" class="btn btn-primary">Register</button>
+  </form>
+</div>
+
+</body>
+</html>
