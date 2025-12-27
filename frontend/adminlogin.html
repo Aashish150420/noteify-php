@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="cssfiles/loginregistercss.css">
+<title>NOTEIFY Admin Login</title>
+</head>
+<body>
+<nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon"><i class="fa-solid fa-book"></i></span>
+                <span class="brand-name">NOTEIFY</span>
+            </div>
+        </div>
+    </nav>
+<div class="form-container">
+      <div class="page-header">
+        <h1 class="page-header">Admin Login</h1>
+    </div>
+  <form action="/login" method="POST" onsubmit="return validateLogin()">
+    <div class="form-group">
+      <label for="username">Username:</label>
+      <input type="text" id="adminuname" name="username" required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password:</label>
+      <input type="password" id="adminpass" name="password" required>
+      <input type="checkbox" onclick="togglePassword('password')"> Show Password
+    </div>
+
+    <button type="submit" class="btn btn-primary">Login</button>
+    <p onclick="goToLogin()">Not an Admin? Click here</p>
+  </form>
+</div>
+<script src= "app.js"></script>
+</body>
+</html>

@@ -289,9 +289,14 @@ function goToRegister() {
     window.location.href = "register.html";
 }
 
+//function to navigate to admin login
+function goToAdminLogin(){
+    window.location.href = "adminlogin.html"
+}
+
 //function to navigate to login page
 function goToLogin() {
-    window.location.href = "login.html";
+    window.location.href = "index.html";
 }
 
 //function to validate login form

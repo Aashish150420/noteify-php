@@ -1,101 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>NOTEIFY</title>
-    <link rel="stylesheet" href="cssfiles/styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="cssfiles/loginregistercss.css">
+<title>NOTEIFY Login</title>
 </head>
 <body>
-
-<!-- NAVBAR -->
 <nav class="navbar">
-    <span class="logo">📚 NOTEIFY</span>
-
-    <div class="nav-links">
-        <button data-page="notes">Notes</button>
-        <button data-page="forum">Forum</button>
-        <button data-page="rooms">Rooms</button>
-
-        <div id="profile-nav">
-            <img id="profile-pic" src="https://via.placeholder.com/35">
-            <span id="profile-name">Student</span>
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon"><i class="fa-solid fa-book"></i></span>
+                <span class="brand-name">NOTEIFY</span>
+            </div>
         </div>
+    </nav>
+<div class="form-container">
+      <div class="page-header">
+        <h1 class="page-header">Login to Your Account</h1>
     </div>
-</nav>
-
-<!-- MAIN CONTAINER -->
-<div class="container">
-
-    <!-- NOTES -->
-    <div id="notes-page" class="page active">
-        <h2>Notes & Resources</h2>
-        <button id="open-upload">Upload Resource</button>
-        <div id="resources" class="grid"></div>
+  <form action="/backend/login.php" method="POST" onsubmit="return validateLogin()">
+    <div class="form-group">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
     </div>
 
-    <!-- FORUM -->
-    <div id="forum-page" class="page">
-        <h2>Forum</h2>
-        <button id="open-post">Create Post</button>
-        <div id="posts" class="grid"></div>
+    <div class="form-group">
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
     </div>
 
-    <!-- ROOMS -->
-    <div id="rooms-page" class="page">
-        <h2>Study Rooms</h2>
-        <button id="open-room">Create Room</button>
-        <div id="rooms" class="grid"></div>
+    <div class="form-group show-password-group">
+        <input type="checkbox" id="showPass" onclick="togglePassword('password')">
+        <label for="showPass">Show Password</label>
     </div>
 
-    <!-- PROFILE -->
-    <div id="profile-page" class="page">
-        <h2>Profile</h2>
-        <input type="file" id="profile-upload">
-        <input id="name" placeholder="Name">
-        <select id="course">
-            <option>BCA</option>
-            <option>BSc CSIT</option>
-        </select>
-        <button id="save-profile">Save</button>
-    </div>
+
+    <button type="submit" class="btn btn-primary">Login</button>
+    <button type="button" onclick="goToRegister()" class="btn btn-primary">Register</button>
+    <p onclick="goToAdminLogin()">Not a user? Click here</p>
+  </form>
 </div>
-
-<!-- POPUP MODAL -->
-<!-- UPLOAD RESOURCE MODAL -->
-<div id="upload-modal" class="modal">
-    <h3>Upload Resource</h3>
-    <input id="res-title" placeholder="Resource title">
-    <input type="file" id="res-file" accept="application/pdf">
-    <button id="save-resource">Save</button>
-    <button onclick="closeModals()">Close</button>
-</div>
-
-<!-- CREATE POST MODAL -->
-<div id="post-modal" class="modal">
-    <h3>Create Post</h3>
-    <input id="post-title" placeholder="Post title">
-    <textarea id="post-content" placeholder="Post content"></textarea>
-    <button id="save-post">Save</button>
-    <button onclick="closeModals()">Close</button>
-</div>
-
-<!-- CREATE ROOM MODAL -->
-<div id="room-modal" class="modal">
-    <h3>Create Room</h3>
-    <input id="room-name" placeholder="Room name">
-    <textarea id="room-desc" placeholder="Room description"></textarea>
-    <button id="save-room">Save</button>
-    <button onclick="closeModals()">Close</button>
-</div>
-<div id="popup" class="modal">
-    <h3 id="popup-title"></h3>
-    <div id="popup-content"></div>
-    <button id="open-new-tab">Open in New Tab</button>
-    <button onclick="closePopup()">Close</button>
-</div>
-
-
-
-<script src="frontend/app.js"></script>
+<script src= "app.js"></script>
 </body>
 </html>
