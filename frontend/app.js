@@ -280,3 +280,62 @@ window.onload = () => {
     renderPosts();
     renderRooms();
 };
+
+
+//for login register pages
+
+//function to navigate to register page
+function goToRegister() {
+    window.location.href = "register.html";
+}
+
+//function to navigate to login page
+function goToLogin() {
+    window.location.href = "login.html";
+}
+
+//function to validate login form
+function validateLogin(){
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+
+    if (username === "" || password === "") {
+        alert("Please fill in all fields.");
+        return false;
+    }
+    alert("Login successful!")
+    return true;
+}
+
+//function to validate register form
+function validateRegister(){
+    let username = document.getElementById("reg-username").value;
+    let password = document.getElementById("reg-password").value;
+    let confirmPassword = document.getElementById("reg-confirm-password").value;
+
+    //to check if all fields are filled
+    if (username === "" || password === "" || confirmPassword === "") {
+        alert("Please fill in all fields.");
+        return false;
+    }
+
+    //to check if passwords match
+    if (password !== confirmPassword) {
+        alert("Passwords do not match.");
+        return false;
+    }
+    alert("Registration successful!")
+    return true;
+}
+
+//function to toggle password visibility
+function togglePassword(id) {
+    let input= document.getElementById(id);
+
+    if (input.type === "password"){
+        input.type = "text";
+    }
+    else{
+        input.type = "password";
+    }
+}

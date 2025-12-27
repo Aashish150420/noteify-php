@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📚 NOTEIFY</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="css/loginregistercss.css">
+    <link rel="stylesheet" href="cssfiles/loginregistercss.css">
 </head>
 <body>
      <nav class="navbar">
@@ -21,7 +21,7 @@
       <div class="page-header">
         <h1 class="page-header">Create Your Account</h1>
     </div>
-            <form action="/register" method="POST">
+            <form action="/register" method="POST" onsubmit="return validateRegister()">
                 <div class="form-group">
                     <label for="fullname">Full Name:</label>
                     <input type="text" id="fullname" name="fullname"  required>
@@ -42,6 +42,7 @@
                 <div class="form-group">
                     <label for="password">Password:</label>
                     <input type="password" id="password" name="password" required>
+                    <input type="checkbox" onclick="togglePassword('password')"> Show Password
                 </div>
                 <div class="form-group">
                     <label for="password">Confirm Password:</label>
@@ -54,8 +55,9 @@
                 </div>
 
         <button type="submit" class="btn btn-primary">Register</button>
-        <button type="button" onclick="window.location.href='login.html'" class="btn btn-primary">Login</button>
+        <button type="button" onclick="goToLogin()" class="btn btn-primary">Login</button>
     </form>
     </div>
+<script src="app.js"></script>
 </body>
 </html>
