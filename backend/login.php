@@ -1,37 +1,39 @@
 <?php
-    include 'config.php';
-    //fetch data from login form
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $username = $_POST['username'];
-        $password = $_POST['password'];
+session_start(); // Always at the very top
+include 'config.php';
 
-        //execute SQL statement
-        $stmt = $conn->prepare("SELECT id, password FROM users WHERE username = ?");
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $stmt->store_result();
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = trim($_POST['username']);
+    $password = $_POST['password'];
 
-        //check if user exists
-        if ($stmt->num_rows > 0) {
-            $stmt->bind_result($id, $hashed_password);
-            $stmt->fetch();
+    $stmt = $conn->prepare("SELECT id, password, role FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->store_result();
 
-            //verify password
-            if (password_verify($password, $hashed_password)) {
-                
-                //start session and redirect to dashboard
-                session_start();
-                $_SESSION['user_id'] = $id;
-                header("Location: ../frontend/Homepage.html");
-                exit();
-            } else {
-                echo "Invalid password.";
+    if ($stmt->num_rows > 0) {
+        $stmt->bind_result($id, $hashed_password, $role);
+        $stmt->fetch();
+
+        if (password_verify($password, $hashed_password)) {
+            $_SESSION['user_id'] = $id;
+            $_SESSION['role'] = $role;
+
+            if ($role === 'admin') {
+                header("Location: Noteify/frontend/adminpanel.html");
+            } 
+            if ($role === 'user') {
+                header("Location: Noteify/frontend/Homepage.html");
             }
-        } else {
-            echo "No user found with that username.";
-        }
 
-        $stmt->close();
-        $conn->close();
+            exit();
+        } else {
+            echo "Invalid password.";
+        }
+    } else {
+        echo "No user found with that username.";
     }
-?>
+
+    $stmt->close();
+    $conn->close();
+}
