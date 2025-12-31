@@ -1,3 +1,12 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: adminlogin.html");
+    exit();
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,6 +106,6 @@
 
 
 
-<script src="frontend/app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

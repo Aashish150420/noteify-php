@@ -20,12 +20,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['role'] = $role;
 
             if ($role === 'admin') {
-                header("Location: Noteify/frontend/adminpanel.html");
-            } 
-            if ($role === 'user') {
-                header("Location: Noteify/frontend/Homepage.html");
+                header("Location: ../frontend/adminpanel.php");
+            } else {
+                header("Location: ../frontend/Homepage.html");
             }
-
             exit();
         } else {
             echo "Invalid password.";

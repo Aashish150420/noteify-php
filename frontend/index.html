@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="cssfiles/loginregistercss.css">
+<link rel="stylesheet" href="cssfiles/styles.css">
 <title>NOTEIFY Login</title>
 </head>
 <body>
@@ -21,6 +21,7 @@
         <h1 class="page-header">Login to Your Account</h1>
     </div>
   <form action="/backend/login.php" method="POST" onsubmit="return validateLogin()">
+  
     <div class="form-group">
       <label for="username">Username:</label>
       <input type="text" id="username" name="username" required>
@@ -39,7 +40,9 @@
 
     <button type="submit" class="btn btn-primary">Login</button>
     <button type="button" onclick="goToRegister()" class="btn btn-primary">Register</button>
-    <p onclick="goToAdminLogin()">Not a user? Click here</p>
+    <br> <br>
+    <p>Not a user? Click here</p>
+    <button type="button" onclick="goToAdminLogin()" class="btn btn-secondary">Admin Login</button>
   </form>
 </div>
 <script src= "app.js"></script>
