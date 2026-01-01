@@ -2,16 +2,31 @@
 
 ## API Endpoints Overview
 
+### User Endpoints
+
 | Endpoint | Method | Purpose | Input | Output |
 |----------|--------|---------|-------|--------|
-| `api/notes.php` | GET | Get all notes | None | JSON array of notes |
-| `api/upload.php` | POST | Upload file | FormData | JSON with note_id |
-| `api/avatar.php` | POST | Upload avatar | FormData | JSON with file URL |
-| `api/forum.php` | GET | Get all posts | None | JSON array of posts |
-| `api/forum.php` | POST | Create post | JSON body | JSON with new post |
-| `api/comments.php` | GET | Get comments | ?post_id=X | JSON array of comments |
-| `api/comments.php` | POST | Add comment | JSON body | JSON with new comment |
-| `api/users.php` | GET | Get all users | None | JSON array of users |
+| `backend/api/notes.php` | GET | Get all notes | None | JSON array of notes |
+| `backend/api/upload.php` | POST | Upload file | FormData | JSON with note_id |
+| `backend/api/avatar.php` | POST | Upload avatar | FormData | JSON with file URL |
+| `backend/api/forum.php` | GET | Get all posts | None | JSON array of posts |
+| `backend/api/forum.php` | POST | Create post | JSON body | JSON with new post |
+| `backend/api/comments.php` | GET | Get comments | ?post_id=X | JSON array of comments |
+| `backend/api/comments.php` | POST | Add comment | JSON body | JSON with new comment |
+| `backend/api/users.php` | GET | Get all users | None | JSON array of users |
+| `backend/api/user_profile.php` | GET | Get user profile | Session | JSON profile data |
+| `backend/api/current_user.php` | GET | Get current user | Session | JSON user ID |
+
+### Admin Endpoints
+
+| Endpoint | Method | Purpose | Input | Output |
+|----------|--------|---------|-------|--------|
+| `backend/api/admin/notes.php` | GET | Get all notes | None | JSON array of notes |
+| `backend/api/admin/notes.php` | DELETE | Delete note | ?note_id=X | JSON success/error |
+| `backend/api/admin/forum.php` | GET | Get posts/comments | ?type=posts\|comments | JSON array |
+| `backend/api/admin/forum.php` | DELETE | Delete post/comment | JSON body | JSON success/error |
+| `backend/api/admin/users.php` | GET | Get all users | None | JSON array of users |
+| `backend/api/admin/profile.php` | GET | Get admin profile | Session | JSON profile data |
 
 ---
 
@@ -77,7 +92,7 @@ $sql = "SELECT * FROM comments WHERE post_id = $postId";
 ## Database Tables Used
 
 1. **users** - User accounts
-   - `user_id`, `name`, `email`, `role`, `created_at`
+   - `id`, `fullname`, `email`, `username`, `password`, `role`, `profile_pic`, `course`, `year`, `bio`, `created_at`
 
 2. **notes** - Uploaded resources
    - `note_id`, `title`, `description`, `course`, `type`, `year`, `file_path`, `uploaded_by`, `views`, `downloads`, `created_at`
@@ -243,20 +258,38 @@ date('M j, Y H:i') // Same format in PHP
 ## File Structure
 
 ```
-api/
-  ├── notes.php      - GET all notes
-  ├── upload.php     - POST upload file
-  ├── avatar.php     - POST upload avatar
-  ├── forum.php      - GET/POST forum posts
-  ├── comments.php   - GET/POST comments
-  └── users.php      - GET all users
+backend/
+  ├── api/
+  │   ├── admin/          - Admin API endpoints
+  │   │   ├── forum.php   - Admin forum management
+  │   │   ├── notes.php   - Admin notes management
+  │   │   ├── profile.php - Admin profile
+  │   │   └── users.php   - User management
+  │   ├── avatar.php      - POST upload avatar
+  │   ├── comments.php    - GET/POST comments
+  │   ├── current_user.php - GET current user
+  │   ├── forum.php       - GET/POST forum posts
+  │   ├── notes.php       - GET all notes
+  │   ├── upload.php      - POST upload file
+  │   ├── user_profile.php - GET user profile
+  │   └── users.php       - GET all users
+  ├── login.php           - User login
+  ├── logout.php          - Logout
+  ├── register.php        - User registration
+  └── database.sql        - Database schema
 
 config/
-  └── db.php         - Database connection
+  └── db.php              - Database connection
+
+frontend/
+  ├── admin/              - Admin panel
+  │   ├── index.html
+  │   └── admin.js
+  └── app.js              - Main JavaScript
 
 uploads/
-  ├── [files]        - Uploaded notes
-  └── avatars/       - Profile pictures
+  ├── [files]             - Uploaded notes
+  └── avatars/            - Profile pictures
 ```
 
 ---

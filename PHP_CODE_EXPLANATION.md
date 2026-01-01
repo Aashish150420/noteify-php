@@ -44,7 +44,7 @@ if (!$conn) {
 **Explanation Points for Viva**:
 1. **Why centralized?** 
    - Single point of configuration (change credentials in one place)
-   - Reusable across all API files via `include("../config/db.php")`
+   - Reusable across all API files via `include("../../config/db.php")` (from backend/api/)
    - Easier maintenance
 
 2. **Connection Details**:
@@ -59,9 +59,54 @@ if (!$conn) {
 
 ---
 
+## Authentication System
+
+### Login - `backend/login.php`
+
+**Purpose**: Authenticate users and create PHP session
+
+**Process**:
+1. Receives username/email and password from form
+2. Queries database to find user
+3. Verifies password using `password_verify()`
+4. Creates PHP session with `session_start()` and `$_SESSION['user_id']`
+5. Redirects to homepage on success
+
+**Session Management**:
+```php
+session_start();
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['username'] = $user['username'];
+$_SESSION['role'] = $user['role'];
+```
+
+### Registration - `backend/register.php`
+
+**Purpose**: Create new user accounts
+
+**Process**:
+1. Validates form data
+2. Hashes password using `password_hash()`
+3. Handles optional profile picture upload
+4. Inserts user into database
+5. Creates session and redirects
+
+### Logout - `backend/logout.php`
+
+**Purpose**: Destroy session and log user out
+
+**Code**:
+```php
+session_start();
+session_destroy();
+header('Location: ../frontend/index.html');
+```
+
+---
+
 ## API Endpoints
 
-### 1. Notes API - `api/notes.php`
+### 1. Notes API - `backend/api/notes.php`
 
 **Purpose**: Retrieve all uploaded notes/resources from database
 
@@ -103,7 +148,7 @@ mysqli_close($conn);
 ```javascript
 // Frontend calls this on page load
 async function loadNotesFromAPI() {
-    const response = await fetch('../api/notes.php');
+    const response = await fetch('../backend/api/notes.php');
     const data = await response.json();
     // Maps data to frontend format and renders
 }
@@ -117,7 +162,7 @@ async function loadNotesFromAPI() {
 
 ---
 
-### 2. Upload API - `api/upload.php`
+### 2. Upload API - `backend/api/upload.php`
 
 **Purpose**: Handle file uploads (PDFs, Word docs) and store metadata in database
 
@@ -187,7 +232,7 @@ formData.append('title', title);
 formData.append('description', description);
 formData.append('file', fileInput.files[0]);
 
-const response = await fetch('../api/upload.php', {
+const response = await fetch('../backend/api/upload.php', {
     method: 'POST',
     body: formData
 });
@@ -205,7 +250,7 @@ const result = await response.json();
 
 ---
 
-### 3. Avatar API - `api/avatar.php`
+### 3. Avatar API - `backend/api/avatar.php`
 
 **Purpose**: Handle profile picture uploads (images only)
 
@@ -253,14 +298,20 @@ echo json_encode([
 const formData = new FormData();
 formData.append('file', file);
 
-const response = await fetch('../api/avatar.php', {
+const response = await fetch('../backend/api/avatar.php', {
     method: 'POST',
     body: formData
 });
 
 const result = await response.json();
-userProfile.avatar = '../' + result.url; // Store in localStorage
+userProfile.avatar = '../../' + result.url; // Store in localStorage
 ```
+
+**Key Updates**:
+- Now includes session-based authentication
+- Updates database with profile picture path
+- Deletes old avatar when new one is uploaded
+- Validates file type and size (5MB max)
 
 **Viva Points**:
 - **Why no database?** Avatar is stored in user's browser localStorage, not tied to user account
@@ -269,7 +320,7 @@ userProfile.avatar = '../' + result.url; // Store in localStorage
 
 ---
 
-### 4. Forum API - `api/forum.php`
+### 4. Forum API - `backend/api/forum.php`
 
 **Purpose**: Manage forum posts (create and retrieve)
 
@@ -365,7 +416,7 @@ if ($method === 'POST') {
 ```javascript
 // GET - Load posts on page load
 async function loadForumPostsFromAPI() {
-    const response = await fetch('../api/forum.php');
+    const response = await fetch('../backend/api/forum.php');
     const data = await response.json();
     forumPosts = data;
     renderForumPosts();
@@ -379,7 +430,7 @@ async function handleCreatePost() {
         authorAvatar: userProfile.avatar
     };
     
-    const response = await fetch('../api/forum.php', {
+    const response = await fetch('../backend/api/forum.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -399,7 +450,7 @@ async function handleCreatePost() {
 
 ---
 
-### 5. Comments API - `api/comments.php`
+### 5. Comments API - `backend/api/comments.php`
 
 **Purpose**: Manage comments on forum posts
 
@@ -492,7 +543,7 @@ if ($method === 'POST') {
 ```javascript
 // GET - Load comments when opening post
 async function loadCommentsForCurrentPost() {
-    const response = await fetch(`../api/comments.php?post_id=${currentPost.id}`);
+    const response = await fetch(`../backend/api/comments.php?post_id=${currentPost.id}`);
     const data = await response.json();
     currentComments = data;
     renderComments();
@@ -507,7 +558,7 @@ async function handleAddComment() {
         authorAvatar: userProfile.avatar
     };
     
-    const response = await fetch('../api/comments.php', {
+    const response = await fetch('../backend/api/comments.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -526,9 +577,9 @@ async function handleAddComment() {
 
 ---
 
-### 6. Users API - `api/users.php`
+### 6. Users API - `backend/api/users.php`
 
-**Purpose**: Retrieve list of all users (currently not used in frontend, but available)
+**Purpose**: Retrieve list of all users
 
 **HTTP Method**: GET only
 
@@ -536,9 +587,9 @@ async function handleAddComment() {
 ```php
 <?php
 header('Content-Type: application/json');
-include("../config/db.php");
+include("../../config/db.php");
 
-$result = mysqli_query($conn, "SELECT user_id, name, email, role FROM users");
+$result = mysqli_query($conn, "SELECT id, fullname, email, username, role FROM users");
 $users = [];
 while ($row = mysqli_fetch_assoc($result)) {
     $users[] = $row;
@@ -549,7 +600,83 @@ mysqli_close($conn);
 ?>
 ```
 
-**Note**: This endpoint exists but isn't currently integrated into the frontend. Could be used for admin features or user search.
+**Note**: Returns all users. Used in admin panel for user management.
+
+---
+
+### 7. User Profile API - `backend/api/user_profile.php`
+
+**Purpose**: Get current user's profile information
+
+**HTTP Method**: GET only
+
+**Key Features**:
+- Uses PHP sessions to identify current user
+- Returns profile data including stats (notes count, views, downloads)
+- Includes profile picture path
+
+**Session Management**:
+```php
+session_start();
+$user_id = $_SESSION['user_id'];
+```
+
+---
+
+### 8. Current User API - `backend/api/current_user.php`
+
+**Purpose**: Get current logged-in user ID
+
+**HTTP Method**: GET only
+
+**Use Case**: Used by frontend to identify which user is logged in for uploads and posts.
+
+---
+
+### 9. Admin Notes API - `backend/api/admin/notes.php`
+
+**Purpose**: Admin management of notes (view and delete)
+
+**HTTP Methods**: GET and DELETE
+
+**GET Request**: Returns all notes with author information
+
+**DELETE Request**: Deletes a note by ID
+```php
+if ($method === 'DELETE') {
+    $note_id = $_GET['note_id'];
+    $sql = "DELETE FROM notes WHERE note_id = $note_id";
+    mysqli_query($conn, $sql);
+    echo json_encode(["success" => true]);
+}
+```
+
+---
+
+### 10. Admin Forum API - `backend/api/admin/forum.php`
+
+**Purpose**: Admin management of forum posts and comments
+
+**HTTP Methods**: GET and DELETE
+
+**GET Request**: Returns posts or comments based on `?type=posts` or `?type=comments`
+
+**DELETE Request**: Deletes post or comment
+```php
+$data = json_decode(file_get_contents('php://input'), true);
+$type = $data['type']; // 'post' or 'comment'
+$id = $data['id'];
+```
+
+---
+
+### 11. Admin Profile API - `backend/api/admin/profile.php`
+
+**Purpose**: Get admin user profile with statistics
+
+**HTTP Method**: GET only
+
+**Returns**: Admin profile with notes count, total views, total downloads
 
 ---
 

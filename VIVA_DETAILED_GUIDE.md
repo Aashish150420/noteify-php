@@ -16,11 +16,13 @@
 
 ### What is Noteify?
 **Noteify** is a college notes and resource sharing platform where students can:
+- Register and login with secure authentication
 - Upload and download study materials (PDFs, Word docs)
-- Participate in forum discussions
+- Participate in forum discussions with categories
 - Comment on forum posts
-- Upload profile pictures
+- Upload and manage profile pictures
 - View study resources by course, type, and year
+- Access admin panel for content management (admin users)
 
 ### Technology Stack
 - **Frontend**: HTML, CSS, JavaScript (Vanilla JS)
@@ -91,14 +93,20 @@
 #### 1. `users` Table
 ```sql
 CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fullname VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    role VARCHAR(50) DEFAULT 'student',
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('user','admin') NOT NULL DEFAULT 'user',
+    profile_pic VARCHAR(255) DEFAULT 'default.png',
+    course VARCHAR(50) NOT NULL,
+    year VARCHAR(20) DEFAULT '1',
+    bio TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
-**Purpose**: Stores user account information
+**Purpose**: Stores user account information with authentication credentials
 
 #### 2. `notes` Table
 ```sql
@@ -148,14 +156,14 @@ CREATE TABLE forum_comments (
 
 ### Relationships
 
-- `notes.uploaded_by` → `users.user_id` (Foreign Key)
-- `forum_comments.post_id` → `forum_posts.id` (Logical relationship)
+- `notes.uploaded_by` → `users.id` (Foreign Key)
+- `forum_comments.post_id` → `forum_posts.id` (Foreign Key with CASCADE delete)
 
 ---
 
 ## API Endpoints Detailed
 
-### 1. Notes API (`api/notes.php`)
+### 1. Notes API (`backend/api/notes.php`)
 
 #### Purpose
 Retrieve all uploaded notes/resources from database
@@ -209,7 +217,7 @@ LEFT JOIN users u ON n.uploaded_by = u.user_id
 #### Frontend Usage
 ```javascript
 async function loadNotesFromAPI() {
-    const response = await fetch('../api/notes.php');
+    const response = await fetch('../backend/api/notes.php');
     const data = await response.json();
     // data is array of note objects
     // Each object has: note_id, title, description, course, 
@@ -219,7 +227,7 @@ async function loadNotesFromAPI() {
 
 ---
 
-### 2. Upload API (`api/upload.php`)
+### 2. Upload API (`backend/api/upload.php`)
 
 #### Purpose
 Handle file uploads and store metadata in database
@@ -286,10 +294,18 @@ const formData = new FormData();
 formData.append('title', 'My Notes');
 formData.append('file', fileInput.files[0]);
 
-fetch('../api/upload.php', {
+fetch('../backend/api/upload.php', {
     method: 'POST',
     body: formData  // FormData automatically sets Content-Type
 });
+```
+
+**Session-Based User ID**:
+```javascript
+// Get current user ID from session
+const userResponse = await fetch('../backend/api/current_user.php');
+const userData = await userResponse.json();
+formData.append('uploaded_by', userData.user_id);
 ```
 
 **Why FormData?**
@@ -299,7 +315,7 @@ fetch('../api/upload.php', {
 
 ---
 
-### 3. Forum API (`api/forum.php`)
+### 3. Forum API (`backend/api/forum.php`)
 
 #### GET Request - Retrieve All Posts
 
@@ -394,12 +410,12 @@ $data = json_decode($input, true);
 #### Frontend Usage
 ```javascript
 // GET posts
-fetch('../api/forum.php')
+fetch('../backend/api/forum.php')
   .then(res => res.json())
   .then(posts => console.log(posts));
 
 // POST new post
-fetch('../api/forum.php', {
+fetch('../backend/api/forum.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -407,14 +423,14 @@ fetch('../api/forum.php', {
         content: 'How do I study?',
         category: 'homework',
         author: 'John Doe',
-        authorAvatar: '../uploads/avatars/avatar.png'
+        authorAvatar: '../../uploads/avatars/avatar.png'
     })
 });
 ```
 
 ---
 
-### 4. Comments API (`api/comments.php`)
+### 4. Comments API (`backend/api/comments.php`)
 
 #### GET Request - Get Comments for Post
 
@@ -486,26 +502,32 @@ if ($method === 'POST') {
 #### Frontend Usage
 ```javascript
 // GET comments
-fetch(`../api/comments.php?post_id=${postId}`)
+fetch(`../backend/api/comments.php?post_id=${postId}`)
   .then(res => res.json())
   .then(comments => console.log(comments));
 
 // POST comment
-fetch('../api/comments.php', {
+fetch('../backend/api/comments.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
         post_id: 5,
         text: 'Great question!',
         author: 'Jane Doe',
-        authorAvatar: '../uploads/avatars/jane.png'
+        authorAvatar: '../../uploads/avatars/jane.png'
     })
 });
 ```
 
 ---
 
-### 5. Avatar API (`api/avatar.php`)
+### 5. Avatar API (`backend/api/avatar.php`)
+
+**Key Updates**:
+- Now includes session-based authentication
+- Updates database with profile picture path
+- Deletes old avatar when new one is uploaded
+- Validates file type (JPEG, PNG, GIF, WebP) and size (5MB max)
 
 #### Purpose
 Upload profile pictures (images only)
@@ -555,16 +577,107 @@ echo json_encode([
 const formData = new FormData();
 formData.append('file', fileInput.files[0]);
 
-fetch('../api/avatar.php', {
+fetch('../backend/api/avatar.php', {
     method: 'POST',
     body: formData
 })
 .then(res => res.json())
 .then(result => {
-    userProfile.avatar = '../' + result.url;
+    userProfile.avatar = '../../' + result.url;
     localStorage.setItem('userProfile', JSON.stringify(userProfile));
+    // Also updates database via session
 });
 ```
+
+---
+
+### 6. Authentication System
+
+#### Login - `backend/login.php`
+
+**Purpose**: Authenticate users and create PHP session
+
+**Process**:
+1. Receives username/email and password from form
+2. Queries database to find user
+3. Verifies password using `password_verify()`
+4. Creates PHP session with `session_start()` and `$_SESSION['user_id']`
+5. Redirects to homepage on success
+
+**Session Management**:
+```php
+session_start();
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['username'] = $user['username'];
+$_SESSION['role'] = $user['role'];
+```
+
+#### Registration - `backend/register.php`
+
+**Purpose**: Create new user accounts
+
+**Process**:
+1. Validates form data
+2. Hashes password using `password_hash()` with PASSWORD_DEFAULT
+3. Handles optional profile picture upload
+4. Inserts user into database
+5. Creates session and redirects
+
+#### Logout - `backend/logout.php`
+
+**Purpose**: Destroy session and log user out
+
+**Code**:
+```php
+session_start();
+session_destroy();
+header('Location: ../frontend/index.html');
+```
+
+---
+
+### 7. Admin Panel APIs
+
+#### Admin Notes API - `backend/api/admin/notes.php`
+
+**Purpose**: Admin management of notes (view and delete)
+
+**HTTP Methods**: GET and DELETE
+
+**GET Request**: Returns all notes with author information
+
+**DELETE Request**: Deletes a note by ID
+```php
+if ($method === 'DELETE') {
+    $note_id = $_GET['note_id'];
+    $sql = "DELETE FROM notes WHERE note_id = $note_id";
+    mysqli_query($conn, $sql);
+    echo json_encode(["success" => true]);
+}
+```
+
+#### Admin Forum API - `backend/api/admin/forum.php`
+
+**Purpose**: Admin management of forum posts and comments
+
+**HTTP Methods**: GET and DELETE
+
+**GET Request**: Returns posts or comments based on `?type=posts` or `?type=comments`
+
+**DELETE Request**: Deletes post or comment
+```php
+$data = json_decode(file_get_contents('php://input'), true);
+$type = $data['type']; // 'post' or 'comment'
+$id = $data['id'];
+```
+
+#### Admin Profile API - `backend/api/admin/profile.php`
+
+**Purpose**: Get admin user profile with statistics
+
+**HTTP Method**: GET only
+
+**Returns**: Admin profile with notes count, total views, total downloads
 
 ---
 
@@ -838,12 +951,33 @@ echo json_encode(["message" => "File uploaded successfully"]);
 ### Q10: How does the avatar system work?
 
 **Answer**:
-- Avatar uploaded via `api/avatar.php`
+- Avatar uploaded via `backend/api/avatar.php`
 - File saved to `uploads/avatars/` folder
 - Path returned in JSON response
+- Database updated with profile picture path
 - Frontend stores path in browser localStorage
-- Not stored in database (client-side only)
-- Persists across page reloads via localStorage
+- Old avatar deleted when new one uploaded
+- Validates file type (images only) and size (5MB max)
+
+### Q11: How does authentication work?
+
+**Answer**:
+- Users register with username, email, and password
+- Password hashed using `password_hash()` with PASSWORD_DEFAULT
+- Login verifies password using `password_verify()`
+- PHP sessions store user ID, username, and role
+- Session persists across page loads
+- Admin users have special role flag in database
+
+### Q12: What is the admin panel?
+
+**Answer**:
+- Separate interface for admin users
+- Can view and delete all notes
+- Can manage forum posts and comments
+- Can view all users
+- Access via `frontend/admin/index.html`
+- Uses separate API endpoints in `backend/api/admin/`
 
 ---
 
