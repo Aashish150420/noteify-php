@@ -31,8 +31,22 @@
                     <input type="text" id="course" name="course" required>
                 </div>
                 <div class="form-group">
+                    <label for="year">Year:</label>
+                    <select id="year" name="year" required>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                        <option value="graduate">Graduate</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="bio">Bio (Optional):</label>
+                    <textarea id="bio" name="bio" rows="3" placeholder="Tell us about yourself..."></textarea>
                 </div>
                 <div class="form-group">
                     <label for="username">Username:</label>
@@ -45,8 +59,9 @@
                     <input type="checkbox" onclick="togglePassword('password')"> Show Password
                 </div>
                 <div class="form-group">
-                    <label for="password">Confirm Password:</label>
-                    <input type="password" id="password" name="password" required>
+                    <label for="confirm_password">Confirm Password:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                    <input type="checkbox" onclick="togglePassword('confirm_password')"> Show Password
                 </div>
 
                 <div class="form-group">

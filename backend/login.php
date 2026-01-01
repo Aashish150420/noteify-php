@@ -1,29 +1,27 @@
 <?php
-session_start(); // Always at the very top
-include 'config.php';
+session_start();
+include('../config/db.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
 
-    $stmt = $conn->prepare("SELECT id, password, role FROM users WHERE username = ?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $stmt->store_result();
+    $username = mysqli_real_escape_string($conn, $username);
+    $result = mysqli_query($conn, "SELECT id, password, role FROM users WHERE username = '$username'");
 
-    if ($stmt->num_rows > 0) {
-        $stmt->bind_result($id, $hashed_password, $role);
-        $stmt->fetch();
+    if (mysqli_num_rows($result) > 0) {
+        $user = mysqli_fetch_assoc($result);
+        
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $username;
+            $_SESSION['role'] = $user['role'];
 
-        if (password_verify($password, $hashed_password)) {
-            $_SESSION['user_id'] = $id;
-            $_SESSION['role'] = $role;
-
-            if ($role === 'admin') {
-                header("Location: ../frontend/adminpanel.php");
-            } else {
-                header("Location: ../frontend/Homepage.html");
-            }
+                if ($user['role'] === 'admin') {
+                    header("Location: ../frontend/admin/index.html");
+                } else {
+                    header("Location: ../frontend/Homepage.html");
+                }
             exit();
         } else {
             echo "Invalid password.";
@@ -31,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         echo "No user found with that username.";
     }
-
-    $stmt->close();
-    $conn->close();
+    
+    mysqli_close($conn);
 }
+?>

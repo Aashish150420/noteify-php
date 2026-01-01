@@ -20,7 +20,7 @@
       <div class="page-header">
         <h1 class="page-header">Login to Your Account</h1>
     </div>
-  <form action="/backend/login.php" method="POST" onsubmit="return validateLogin()">
+  <form action="../backend/login.php" method="POST" onsubmit="return validateLogin()">
   
     <div class="form-group">
       <label for="username">Username:</label>
@@ -42,7 +42,7 @@
     <button type="button" onclick="goToRegister()" class="btn btn-primary">Register</button>
     <br> <br>
     <p>Not a user? Click here</p>
-    <button type="button" onclick="goToAdminLogin()" class="btn btn-secondary">Admin Login</button>
+    <button type="button" onclick="window.location.href='adminlogin.html'" class="btn btn-secondary">Admin Login</button>
   </form>
 </div>
 <script src= "app.js"></script>

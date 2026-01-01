@@ -14,6 +14,7 @@ const CATEGORY_ICONS = {
 
 // State
 let currentPage = 'notes';
+let viewMode = 'cards'; // 'cards' or 'list'
 let resources = [];
 let forumPosts = [];
 let rooms = [];
@@ -67,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeModals();
     initializeFilters();
     initializeProfile();
+    loadViewMode(); // Load saved view mode
     loadNotesFromAPI();
     loadForumPostsFromAPI();
     renderRooms();
@@ -77,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Load notes from API
 async function loadNotesFromAPI() {
     try {
-        const response = await fetch('../api/notes.php');
+        const response = await fetch('../backend/api/notes.php');
         if (!response.ok) {
             throw new Error('Failed to fetch notes');
         }
@@ -119,18 +121,8 @@ async function loadNotesFromAPI() {
     }
 }
 
-// Navigation
-function initializeNavigation() {
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const page = link.dataset.page;
-            switchPage(page);
-        });
-    });
-}
-
-function switchPage(page) {
+// Make switchPage globally accessible immediately (before DOMContentLoaded)
+window.switchPage = function(page) {
     currentPage = page;
     
     // Update navigation
@@ -165,54 +157,99 @@ function switchPage(page) {
     if (page === 'forum') {
         loadForumPostsFromAPI();
     }
+};
+
+// Navigation
+function initializeNavigation() {
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const page = link.dataset.page;
+            switchPage(page);
+        });
+    });
 }
 
 // Modals
 function initializeModals() {
     // Upload Modal
-    document.getElementById('upload-note-btn').addEventListener('click', () => {
-        document.getElementById('upload-modal').classList.add('active');
-    });
+    const uploadBtn = document.getElementById('upload-note-btn');
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', () => {
+            const modal = document.getElementById('upload-modal');
+            if (modal) modal.classList.add('active');
+        });
+    }
     
-    document.getElementById('close-upload-modal').addEventListener('click', closeUploadModal);
-    document.getElementById('cancel-upload-btn').addEventListener('click', closeUploadModal);
-    document.getElementById('submit-upload-btn').addEventListener('click', handleUpload);
+    const closeUploadBtn = document.getElementById('close-upload-modal');
+    if (closeUploadBtn) closeUploadBtn.addEventListener('click', closeUploadModal);
+    const cancelUploadBtn = document.getElementById('cancel-upload-btn');
+    if (cancelUploadBtn) cancelUploadBtn.addEventListener('click', closeUploadModal);
+    const submitUploadBtn = document.getElementById('submit-upload-btn');
+    if (submitUploadBtn) submitUploadBtn.addEventListener('click', handleUpload);
     
     // Post Modal
-    document.getElementById('create-post-btn').addEventListener('click', () => {
-        document.getElementById('post-modal').classList.add('active');
-    });
+    const createPostBtn = document.getElementById('create-post-btn');
+    if (createPostBtn) {
+        createPostBtn.addEventListener('click', () => {
+            const modal = document.getElementById('post-modal');
+            if (modal) modal.classList.add('active');
+        });
+    }
     
-    document.getElementById('close-post-modal').addEventListener('click', closePostModal);
-    document.getElementById('cancel-post-btn').addEventListener('click', closePostModal);
-    document.getElementById('submit-post-btn').addEventListener('click', handleCreatePost);
+    const closePostBtn = document.getElementById('close-post-modal');
+    if (closePostBtn) closePostBtn.addEventListener('click', closePostModal);
+    const cancelPostBtn = document.getElementById('cancel-post-btn');
+    if (cancelPostBtn) cancelPostBtn.addEventListener('click', closePostModal);
+    const submitPostBtn = document.getElementById('submit-post-btn');
+    if (submitPostBtn) submitPostBtn.addEventListener('click', handleCreatePost);
     
     // Room Modal
-    document.getElementById('create-room-btn').addEventListener('click', () => {
-        document.getElementById('room-modal').classList.add('active');
-        renderRoomColorPicker();
-    });
+    const createRoomBtn = document.getElementById('create-room-btn');
+    if (createRoomBtn) {
+        createRoomBtn.addEventListener('click', () => {
+            const modal = document.getElementById('room-modal');
+            if (modal) {
+                modal.classList.add('active');
+                renderRoomColorPicker();
+            }
+        });
+    }
     
-    document.getElementById('close-room-modal').addEventListener('click', closeRoomModal);
-    document.getElementById('cancel-room-btn').addEventListener('click', closeRoomModal);
-    document.getElementById('submit-room-btn').addEventListener('click', handleCreateRoom);
+    const closeRoomBtn = document.getElementById('close-room-modal');
+    if (closeRoomBtn) closeRoomBtn.addEventListener('click', closeRoomModal);
+    const cancelRoomBtn = document.getElementById('cancel-room-btn');
+    if (cancelRoomBtn) cancelRoomBtn.addEventListener('click', closeRoomModal);
+    const submitRoomBtn = document.getElementById('submit-room-btn');
+    if (submitRoomBtn) submitRoomBtn.addEventListener('click', handleCreateRoom);
     
     // Chat Modal
-    document.getElementById('close-chat-modal').addEventListener('click', closeChatModal);
-    document.getElementById('send-message-btn').addEventListener('click', sendMessage);
-    document.getElementById('chat-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+    const closeChatBtn = document.getElementById('close-chat-modal');
+    if (closeChatBtn) closeChatBtn.addEventListener('click', closeChatModal);
+    const sendMessageBtn = document.getElementById('send-message-btn');
+    if (sendMessageBtn) sendMessageBtn.addEventListener('click', sendMessage);
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    }
     
     // Post Detail Modal
-    document.getElementById('close-post-detail-modal').addEventListener('click', closePostDetailModal);
-    document.getElementById('submit-comment-btn').addEventListener('click', handleAddComment);
+    const closePostDetailBtn = document.getElementById('close-post-detail-modal');
+    if (closePostDetailBtn) closePostDetailBtn.addEventListener('click', closePostDetailModal);
+    const submitCommentBtn = document.getElementById('submit-comment-btn');
+    if (submitCommentBtn) submitCommentBtn.addEventListener('click', handleAddComment);
     
     // File upload
-    document.getElementById('upload-file').addEventListener('change', (e) => {
-        const fileName = e.target.files[0]?.name || 'No file chosen';
-        document.getElementById('file-name').textContent = fileName;
-    });
+    const uploadFileInput = document.getElementById('upload-file');
+    if (uploadFileInput) {
+        uploadFileInput.addEventListener('change', (e) => {
+            const fileName = e.target.files[0]?.name || 'No file chosen';
+            const fileNameEl = document.getElementById('file-name');
+            if (fileNameEl) fileNameEl.textContent = fileName;
+        });
+    }
     
     // Close modals on outside click
     document.querySelectorAll('.modal').forEach(modal => {
@@ -226,10 +263,17 @@ function initializeModals() {
 
 // Filters
 function initializeFilters() {
-    document.getElementById('course-filter').addEventListener('change', renderResources);
-    document.getElementById('type-filter').addEventListener('change', renderResources);
-    document.getElementById('year-filter').addEventListener('change', renderResources);
-    document.getElementById('search-notes').addEventListener('input', renderResources);
+    const courseFilter = document.getElementById('course-filter');
+    if (courseFilter) courseFilter.addEventListener('change', renderResources);
+    
+    const typeFilter = document.getElementById('type-filter');
+    if (typeFilter) typeFilter.addEventListener('change', renderResources);
+    
+    const yearFilter = document.getElementById('year-filter');
+    if (yearFilter) yearFilter.addEventListener('change', renderResources);
+    
+    const searchNotes = document.getElementById('search-notes');
+    if (searchNotes) searchNotes.addEventListener('input', renderResources);
     
     // Forum categories
     document.querySelectorAll('.category-chip').forEach(chip => {
@@ -241,12 +285,65 @@ function initializeFilters() {
     });
 }
 
+// Set view mode (cards or list) - make it global
+window.setViewMode = function(mode) {
+    viewMode = mode;
+    localStorage.setItem('noteify_view_mode', mode);
+    
+    // Update button styles
+    const cardsBtn = document.getElementById('view-cards-btn');
+    const listBtn = document.getElementById('view-list-btn');
+    if (cardsBtn && listBtn) {
+        if (mode === 'cards') {
+            cardsBtn.classList.add('btn-primary');
+            cardsBtn.classList.remove('btn-secondary');
+            listBtn.classList.remove('btn-primary');
+            listBtn.classList.add('btn-secondary');
+        } else {
+            listBtn.classList.add('btn-primary');
+            listBtn.classList.remove('btn-secondary');
+            cardsBtn.classList.remove('btn-primary');
+            cardsBtn.classList.add('btn-secondary');
+        }
+    }
+    
+    // Update container class
+    const container = document.getElementById('resources-grid');
+    if (container) {
+        if (mode === 'list') {
+            container.classList.add('resources-list-view');
+        } else {
+            container.classList.remove('resources-list-view');
+        }
+    }
+    
+    renderResources();
+};
+
+// Load view mode from localStorage
+function loadViewMode() {
+    const savedMode = localStorage.getItem('noteify_view_mode');
+    if (savedMode === 'list' || savedMode === 'cards') {
+        setViewMode(savedMode);
+    }
+}
+
 // Resources
 function renderResources() {
-    const courseFilter = document.getElementById('course-filter').value;
-    const typeFilter = document.getElementById('type-filter').value;
-    const yearFilter = document.getElementById('year-filter').value;
-    const searchTerm = document.getElementById('search-notes').value.toLowerCase();
+    const courseFilterEl = document.getElementById('course-filter');
+    const typeFilterEl = document.getElementById('type-filter');
+    const yearFilterEl = document.getElementById('year-filter');
+    const searchNotesEl = document.getElementById('search-notes');
+    const container = document.getElementById('resources-grid');
+    
+    if (!courseFilterEl || !typeFilterEl || !yearFilterEl || !searchNotesEl || !container) {
+        return; // Elements not ready yet
+    }
+    
+    const courseFilter = courseFilterEl.value;
+    const typeFilter = typeFilterEl.value;
+    const yearFilter = yearFilterEl.value;
+    const searchTerm = searchNotesEl.value.toLowerCase();
     
     let filtered = resources.filter(resource => {
         const matchesCourse = courseFilter === 'all' || resource.course === courseFilter;
@@ -258,13 +355,52 @@ function renderResources() {
         return matchesCourse && matchesType && matchesYear && matchesSearch;
     });
     
-    const container = document.getElementById('resources-grid');
-    
     if (filtered.length === 0) {
         container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem;">No resources found. Try adjusting your filters.</p>';
         return;
     }
     
+    if (viewMode === 'list') {
+        // List view
+        container.innerHTML = filtered.map(resource => {
+            const fileUrl = resource.file_path
+                ? `../${resource.file_path.replace(/^\/+/, '')}`
+                : null;
+            
+            return `
+            <div class="resource-list-item" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                        <span class="resource-type ${resource.type}" style="font-size: 0.85rem;">${getTypeIcon(resource.type)} ${getTypeLabel(resource.type)}</span>
+                        <h3 style="margin: 0; font-size: 1.1rem;">${resource.title}</h3>
+                    </div>
+                    <div style="display: flex; gap: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        <span><i class="fa-solid fa-graduation-cap"></i> ${resource.course}</span>
+                        <span><i class="fa-regular fa-calendar-days"></i> ${resource.year}</span>
+                        <span><i class="fa-regular fa-eye"></i> ${resource.views} views</span>
+                        <span><i class="fa-solid fa-download"></i> ${resource.downloads} downloads</span>
+                        <span><img src="${resource.authorAvatar}" alt="${resource.author}" style="width: 20px; height: 20px; border-radius: 50%; vertical-align: middle; margin-right: 0.25rem;"> ${resource.author || 'Unknown'}</span>
+                    </div>
+                    ${resource.description ? `<p style="margin: 0.5rem 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">${resource.description.substring(0, 100)}${resource.description.length > 100 ? '...' : ''}</p>` : ''}
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    ${fileUrl ? `
+                        <a class="btn btn-secondary" href="${fileUrl}" target="_blank" style="padding: 0.5rem 1rem;">
+                            <i class="fa-regular fa-eye"></i> View
+                        </a>
+                        <a class="btn btn-primary" href="${fileUrl}" download style="padding: 0.5rem 1rem;">
+                            <i class="fa-solid fa-download"></i> Download
+                        </a>
+                    ` : `
+                        <button class="btn btn-secondary" disabled style="padding: 0.5rem 1rem;">View</button>
+                        <button class="btn btn-primary" disabled style="padding: 0.5rem 1rem;">Download</button>
+                    `}
+                </div>
+            </div>
+            `;
+        }).join('');
+    } else {
+        // Card view (default)
     container.innerHTML = filtered.map(resource => {
         // Build a simple relative URL from frontend/ to uploads/
         const fileUrl = resource.file_path
@@ -312,6 +448,7 @@ function renderResources() {
         </div>
         `;
     }).join('');
+    }
 }
 
 function getTypeIcon(type) {
@@ -395,6 +532,19 @@ async function handleUpload() {
         return;
     }
     
+    // Get current user ID from session
+    let userId = 1; // Default fallback
+    try {
+        const userResponse = await fetch('../backend/api/current_user.php');
+        const userData = await userResponse.json();
+        if (userData.user_id) {
+            userId = userData.user_id;
+        }
+    } catch (error) {
+        console.error('Error getting user ID:', error);
+        // Use default if API fails
+    }
+    
     // Create FormData for file upload
     const formData = new FormData();
     formData.append('title', title);
@@ -402,11 +552,11 @@ async function handleUpload() {
     formData.append('course', course);
     formData.append('type', type);
     formData.append('year', year);
-    formData.append('uploaded_by', 1); // Default user ID
+    formData.append('uploaded_by', userId);
     formData.append('file', fileInput.files[0]);
     
     try {
-        const response = await fetch('../api/upload.php', {
+        const response = await fetch('../backend/api/upload.php', {
             method: 'POST',
             body: formData
         });
@@ -430,7 +580,7 @@ async function handleUpload() {
 // Forum
 async function loadForumPostsFromAPI() {
     try {
-        const response = await fetch('../api/forum.php');
+        const response = await fetch('../backend/api/forum.php');
         if (!response.ok) {
             throw new Error('Failed to fetch forum posts: ' + response.status);
         }
@@ -514,7 +664,7 @@ async function handleCreatePost() {
     };
 
     try {
-        const response = await fetch('../api/forum.php', {
+        const response = await fetch('../backend/api/forum.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -539,7 +689,7 @@ async function handleCreatePost() {
     }
 }
 
-function openPostDetail(id) {
+window.openPostDetail = function(id) {
     currentPost = forumPosts.find(p => p.id === id);
     if (!currentPost) return;
     
@@ -553,7 +703,7 @@ function openPostDetail(id) {
     document.getElementById('post-detail-content').textContent = currentPost.content;
     
     loadCommentsForCurrentPost();
-}
+};
 
 function closePostDetailModal() {
     document.getElementById('post-detail-modal').classList.remove('active');
@@ -564,7 +714,7 @@ async function loadCommentsForCurrentPost() {
     if (!currentPost) return;
 
     try {
-        const response = await fetch(`../api/comments.php?post_id=${currentPost.id}`);
+        const response = await fetch(`../backend/api/comments.php?post_id=${currentPost.id}`);
         if (!response.ok) {
             throw new Error('Failed to fetch comments');
         }
@@ -621,7 +771,7 @@ async function handleAddComment() {
     };
 
     try {
-        const response = await fetch('../api/comments.php', {
+        const response = await fetch('../backend/api/comments.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -751,11 +901,11 @@ function renderRoomColorPicker() {
     selectRoomColor(ROOM_COLORS[0]);
 }
 
-function selectRoomColor(color) {
+window.selectRoomColor = function(color) {
     document.querySelectorAll('#room-color-picker .color-option').forEach(opt => {
         opt.classList.toggle('selected', opt.dataset.color === color);
     });
-}
+};
 
 function handleCreateRoom() {
     const name = document.getElementById('room-name').value.trim();
@@ -805,7 +955,7 @@ function handleCreateRoom() {
     alert('Room created successfully!');
 }
 
-function joinRoom(id) {
+window.joinRoom = function(id) {
     const room = rooms.find(r => r.id === id);
     if (!room) {
         alert('Room not found!');
@@ -839,16 +989,16 @@ function joinRoom(id) {
     renderRooms();
     openChatRoom(id);
     alert('Successfully joined the room!');
-}
+};
 
-function viewRoomDetails(id) {
+window.viewRoomDetails = function(id) {
     const room = rooms.find(r => r.id === id);
     if (!room) {
         alert('Room not found!');
         return;
     }
     openChatRoom(id);
-}
+};
 
 function openChatRoom(id) {
     currentRoom = rooms.find(r => r.id === id);
@@ -939,7 +1089,10 @@ function sendMessage() {
 }
 
 // Profile
-function initializeProfile() {
+async function initializeProfile() {
+    // Load real profile data from API
+    await loadUserProfile();
+    
     updateProfileDisplay();
     
     document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
@@ -952,13 +1105,63 @@ function initializeProfile() {
     renderUserContributions();
 }
 
+// Load user profile from database
+async function loadUserProfile() {
+    try {
+        const response = await fetch('../backend/api/user_profile.php');
+        if (!response.ok) {
+            throw new Error('Failed to fetch profile');
+        }
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error('Profile error:', data.error);
+            return; // Keep default static data
+        }
+        
+        // Update userProfile with real data
+        userProfile.name = data.fullname || data.username || 'Student User';
+        userProfile.email = data.email || 'student@university.edu';
+        userProfile.course = data.course || 'Computer Science';
+        userProfile.year = data.year || '3';
+        userProfile.bio = data.bio || 'Passionate about learning and sharing knowledge with fellow students.';
+        
+        // Set avatar - use profile_pic if available, otherwise generate from name
+        if (data.profile_pic && data.profile_pic !== 'default.png' && data.profile_pic !== 'uploads/default.png') {
+            userProfile.avatar = `../${data.profile_pic}`;
+        } else {
+            userProfile.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name)}&background=a855f7&color=fff&size=200`;
+        }
+        
+        // Update stats from database
+        userProfile.notes_count = parseInt(data.notes_count) || 0;
+        userProfile.total_views = parseInt(data.total_views) || 0;
+        userProfile.total_downloads = parseInt(data.total_downloads) || 0;
+        
+        // Persist to localStorage
+        persistUserProfile();
+    } catch (error) {
+        console.error('Error loading user profile:', error);
+        // Keep default static data if API fails
+    }
+}
+
 function updateProfileDisplay() {
-    document.getElementById('profile-display-name').textContent = userProfile.name;
-    document.getElementById('edit-name').value = userProfile.name;
-    document.getElementById('edit-course').value = userProfile.course;
-    document.getElementById('edit-year').value = userProfile.year;
-    document.getElementById('edit-bio').value = userProfile.bio;
-    document.getElementById('profile-avatar').src = userProfile.avatar;
+    const profileDisplayName = document.getElementById('profile-display-name');
+    const profileEmail = document.querySelector('.profile-email');
+    const editName = document.getElementById('edit-name');
+    const editCourse = document.getElementById('edit-course');
+    const editYear = document.getElementById('edit-year');
+    const editBio = document.getElementById('edit-bio');
+    const profileAvatar = document.getElementById('profile-avatar');
+    
+    if (profileDisplayName) profileDisplayName.textContent = userProfile.name;
+    if (profileEmail) profileEmail.textContent = userProfile.email || 'student@university.edu';
+    if (editName) editName.value = userProfile.name;
+    if (editCourse) editCourse.value = userProfile.course;
+    if (editYear) editYear.value = userProfile.year;
+    if (editBio) editBio.value = userProfile.bio;
+    if (profileAvatar) profileAvatar.src = userProfile.avatar;
     
     // Header chips + bio
     const courseEl = document.getElementById('profile-course');
@@ -991,17 +1194,23 @@ function updateProfileDisplay() {
     if (navAvatar) navAvatar.src = userProfile.avatar;
     if (navName) navName.textContent = userProfile.name;
     
-    // Calculate real stats from resources
-    const userResources = resources.filter(r => r.author === userProfile.name);
-    const totalViews = userResources.reduce((sum, r) => sum + (r.views || 0), 0);
-    const totalDownloads = userResources.reduce((sum, r) => sum + (r.downloads || 0), 0);
-    
-    // Update stats
+    // Use stats from database if available, otherwise calculate from resources
     const statsValue = document.querySelectorAll('.stat-value');
     if (statsValue.length >= 3) {
-        statsValue[0].textContent = userResources.length; // Resources count
-        statsValue[1].textContent = totalViews; // Total views
-        statsValue[2].textContent = totalDownloads; // Total downloads
+        if (userProfile.notes_count !== undefined) {
+            // Use database stats
+            statsValue[0].textContent = userProfile.notes_count;
+            statsValue[1].textContent = userProfile.total_views || 0;
+            statsValue[2].textContent = userProfile.total_downloads || 0;
+        } else {
+            // Fallback: calculate from resources
+            const userResources = resources.filter(r => r.author === userProfile.name);
+            const totalViews = userResources.reduce((sum, r) => sum + (r.views || 0), 0);
+            const totalDownloads = userResources.reduce((sum, r) => sum + (r.downloads || 0), 0);
+            statsValue[0].textContent = userResources.length;
+            statsValue[1].textContent = totalViews;
+            statsValue[2].textContent = totalDownloads;
+        }
     }
 }
 
@@ -1053,7 +1262,7 @@ async function handleAvatarFileChange(event) {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch('../api/avatar.php', {
+        const response = await fetch('../backend/api/avatar.php', {
             method: 'POST',
             body: formData
         });
@@ -1127,4 +1336,35 @@ function goToLogin() {
 
 function goToAdminLogin() {
     window.location.href = 'adminlogin.html';
+}
+
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.type = field.type === 'password' ? 'text' : 'password';
+    }
+}
+
+function validateLogin() {
+    const username = document.getElementById('username')?.value;
+    const password = document.getElementById('password')?.value;
+    
+    if (!username || !password) {
+        alert('Please fill in all fields');
+        return false;
+    }
+    
+    return true;
+}
+
+function validateRegister() {
+    const password = document.getElementById('password')?.value;
+    const confirmPassword = document.getElementById('confirm_password')?.value;
+    
+    if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return false;
+    }
+    
+    return true;
 }

@@ -9,11 +9,13 @@ CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fullname VARCHAR(100) NOT NULL,
     course VARCHAR(50) NOT NULL,
+    year VARCHAR(20) DEFAULT '1',
     email VARCHAR(100) NOT NULL UNIQUE,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role ENUM('user','admin') NOT NULL DEFAULT 'user',
-    profile_pic VARCHAR(255) DEFAULT 'default.png'
+    profile_pic VARCHAR(255) DEFAULT 'default.png',
+    bio TEXT
 );
 
 -- Forum posts table
@@ -51,5 +53,5 @@ CREATE TABLE IF NOT EXISTS notes (
     views INT DEFAULT 0,
     downloads INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (uploaded_by) REFERENCES users(user_id) ON DELETE SET NULL
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
 );

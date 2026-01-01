@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - NOTEIFY</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../cssfiles/styles.css">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--bg-secondary, #fff);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-secondary, #6b7280);
+            margin-bottom: 0.5rem;
+        }
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-purple, #a855f7);
+        }
+        .notes-table {
+            background: var(--bg-secondary, #fff);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr 0.8fr 1.5fr;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--hover-bg, #f9fafb);
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color, #e5e7eb);
+        }
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr 0.8fr 1.5fr;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            align-items: center;
+        }
+        .table-row:hover {
+            background: var(--hover-bg, #f9fafb);
+        }
+        .btn-delete {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-delete:hover {
+            background: #b91c1c;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary, #6b7280);
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary, #6b7280);
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon"><i class="fa-solid fa-book"></i></span>
+                <span class="brand-name">NOTEIFY - Admin</span>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-link active" data-page="dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+                <a href="#" class="nav-link" data-page="forum"><i class="fa-regular fa-comments"></i> Forum</a>
+            </div>
+            <div class="nav-user" style="cursor: pointer;" data-page="profile">
+                <img id="admin-avatar-nav" src="https://ui-avatars.com/api/?name=Admin&background=dc2626&color=fff" alt="Admin" class="user-avatar-small">
+                <span class="user-name-nav" id="admin-name-nav">Admin</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-wrapper">
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page active">
+            <div class="admin-container">
+                <div class="page-header">
+                    <div>
+                        <h1><i class="fa-solid fa-chart-line"></i> Admin Dashboard</h1>
+                        <p class="page-subtitle">Manage all uploaded notes and resources</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="refreshNotes()">
+                        <i class="fa-solid fa-refresh"></i> Refresh
+                    </button>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <h3><i class="fa-solid fa-book"></i> Total Notes</h3>
+                        <div class="stat-value" id="total-notes">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3><i class="fa-regular fa-eye"></i> Total Views</h3>
+                        <div class="stat-value" id="total-views">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3><i class="fa-solid fa-download"></i> Total Downloads</h3>
+                        <div class="stat-value" id="total-downloads">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3><i class="fa-solid fa-users"></i> Total Users</h3>
+                        <div class="stat-value" id="total-users">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3><i class="fa-regular fa-comments"></i> Total Comments</h3>
+                        <div class="stat-value" id="total-comments">0</div>
+                    </div>
+                </div>
+
+                <!-- Notes Table -->
+                <div class="notes-table">
+                    <div class="table-header">
+                        <div>Title</div>
+                        <div>Author</div>
+                        <div>Course</div>
+                        <div>Type</div>
+                        <div>Views</div>
+                        <div>Downloads</div>
+                        <div>Actions</div>
+                    </div>
+                    <div id="notes-container">
+                        <div class="loading">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Loading notes...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forum Page -->
+        <div id="forum-page" class="page">
+            <div class="admin-container">
+                <div class="page-header">
+                    <div>
+                        <h1><i class="fa-regular fa-comments"></i> Forum Management</h1>
+                        <p class="page-subtitle">Manage forum posts and comments</p>
+                    </div>
+                </div>
+
+                <div class="notes-table">
+                    <div class="table-header" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;">
+                        <div>Title</div>
+                        <div>Author</div>
+                        <div>Category</div>
+                        <div>Comments</div>
+                        <div>Date</div>
+                        <div>Actions</div>
+                    </div>
+                    <div id="forum-posts-container">
+                        <div class="loading">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Loading forum posts...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profile-page" class="page">
+            <div class="admin-container">
+                <div class="page-header">
+                    <h1><i class="fa-regular fa-user"></i> Admin Profile</h1>
+                    <p class="page-subtitle">Your administrator account information</p>
+                </div>
+
+                <div class="profile-container">
+                    <div class="profile-card">
+                        <div class="profile-header-section">
+                            <div class="profile-avatar-section">
+                                <img id="profile-avatar" src="https://ui-avatars.com/api/?name=Admin+User&background=dc2626&color=fff&size=200" alt="Profile" class="profile-avatar">
+                                <button class="btn btn-secondary" id="change-avatar-btn"><i class="fa-solid fa-camera"></i> Change Avatar</button>
+                                <input type="file" id="avatar-file" accept="image/*" style="display: none;">
+                            </div>
+                            <div class="profile-info-section">
+                                <h2 id="profile-display-name">Loading...</h2>
+                                <p class="profile-email" id="profile-email">Loading...</p>
+                                <div class="profile-tags">
+                                    <span class="profile-tag" id="profile-course"><i class="fa-solid fa-graduation-cap"></i> Loading...</span>
+                                    <span class="profile-tag" id="profile-role"><i class="fa-solid fa-shield-halved"></i> Admin</span>
+                                </div>
+                                <p class="profile-bio" id="profile-bio">Loading profile information...</p>
+                                <div class="profile-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-value" id="stat-notes">0</span>
+                                        <span class="stat-label"><i class="fa-solid fa-book"></i> Resources</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-value" id="stat-views">0</span>
+                                        <span class="stat-label"><i class="fa-regular fa-eye"></i> Total Views</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-value" id="stat-downloads">0</span>
+                                        <span class="stat-label"><i class="fa-solid fa-download"></i> Total Downloads</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-edit-section">
+                            <div class="form-group">
+                                <label><i class="fa-regular fa-pen-to-square"></i> Full Name</label>
+                                <input type="text" id="edit-name" class="form-input" placeholder="Your name">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                                <input type="email" id="edit-email" class="form-input" placeholder="Your email" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-user"></i> Username</label>
+                                <input type="text" id="edit-username" class="form-input" placeholder="Your username" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-graduation-cap"></i> Course</label>
+                                <input type="text" id="edit-course" class="form-input" placeholder="e.g., Administrator">
+                            </div>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <button class="btn btn-primary" id="save-profile-btn"><i class="fa-regular fa-floppy-disk"></i> Save Changes</button>
+                                <button class="btn btn-secondary" onclick="window.location.href='../../backend/logout.php'" style="padding: 0.75rem 1.5rem;">
+                                    <i class="fa-solid fa-sign-out-alt"></i> Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
+

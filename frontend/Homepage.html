@@ -35,9 +35,19 @@
                     <h1><i class="fa-solid fa-book"></i> College Notes & Resources</h1>
                     <p class="page-subtitle">Access notes, past questions, and study materials</p>
                 </div>
-                <button class="btn btn-primary" id="upload-note-btn">
-                    <i class="fa-solid fa-upload"></i> Upload Resource
-                </button>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="display: flex; gap: 0.5rem; background: var(--bg-secondary); padding: 0.5rem; border-radius: 0.5rem;">
+                        <button class="btn btn-secondary" id="view-cards-btn" onclick="setViewMode('cards')" style="padding: 0.5rem 1rem;">
+                            <i class="fa-solid fa-th"></i> Cards
+                        </button>
+                        <button class="btn btn-secondary" id="view-list-btn" onclick="setViewMode('list')" style="padding: 0.5rem 1rem;">
+                            <i class="fa-solid fa-list"></i> List
+                        </button>
+                    </div>
+                    <button class="btn btn-primary" id="upload-note-btn">
+                        <i class="fa-solid fa-upload"></i> Upload Resource
+                    </button>
+                </div>
             </div>
 
             <!-- Filters -->
@@ -252,7 +262,12 @@
                             <label><i class="fa-solid fa-pen"></i> Bio</label>
                             <textarea id="edit-bio" class="form-textarea" rows="4" placeholder="Tell us about yourself..."></textarea>
                         </div>
-                        <button class="btn btn-primary" id="save-profile-btn"><i class="fa-regular fa-floppy-disk"></i> Save Changes</button>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <button class="btn btn-primary" id="save-profile-btn"><i class="fa-regular fa-floppy-disk"></i> Save Changes</button>
+                            <button class="btn btn-secondary" onclick="window.location.href='../backend/logout.php'" style="padding: 0.75rem 1.5rem;">
+                                <i class="fa-solid fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
                     </div>
                 </div>
 

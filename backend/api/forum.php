@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include("../config/db.php");
+include("../../config/db.php");
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -29,11 +29,11 @@ if ($method === 'POST') {
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
     
-    $title = $data['title'];
-    $content = $data['content'];
-    $category = $data['category'];
-    $author_name = $data['author'];
-    $author_avatar = $data['authorAvatar'];
+    $title = mysqli_real_escape_string($conn, $data['title']);
+    $content = mysqli_real_escape_string($conn, $data['content']);
+    $category = mysqli_real_escape_string($conn, $data['category']);
+    $author_name = mysqli_real_escape_string($conn, $data['author']);
+    $author_avatar = mysqli_real_escape_string($conn, $data['authorAvatar']);
     
     $sql = "INSERT INTO forum_posts (title, content, category, author_name, author_avatar)
             VALUES ('$title', '$content', '$category', '$author_name', '$author_avatar')";
@@ -61,5 +61,3 @@ if ($method === 'POST') {
     exit;
 }
 ?>
-
-

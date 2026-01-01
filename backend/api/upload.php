@@ -1,15 +1,15 @@
 <?php
 header('Content-Type: application/json');
-include("../config/db.php");
+include("../../config/db.php");
 
-$title = $_POST['title'];
-$description = $_POST['description'];
-$course = $_POST['course'];
-$type = $_POST['type'];
-$year = $_POST['year'];
-$uploaded_by = $_POST['uploaded_by'];
+$title = mysqli_real_escape_string($conn, $_POST['title']);
+$description = mysqli_real_escape_string($conn, $_POST['description']);
+$course = mysqli_real_escape_string($conn, $_POST['course']);
+$type = mysqli_real_escape_string($conn, $_POST['type']);
+$year = intval($_POST['year']);
+$uploaded_by = intval($_POST['uploaded_by']);
 
-$uploadDir = "../uploads/";
+$uploadDir = "../../uploads/";
 if (!file_exists($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }
