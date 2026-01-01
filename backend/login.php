@@ -35,3 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->close();
     $conn->close();
 }
+?>
+<?php 
+echo "Php is working";
+?>

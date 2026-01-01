@@ -1128,3 +1128,18 @@ function goToLogin() {
 function goToAdminLogin() {
     window.location.href = 'adminlogin.html';
 }
+
+function goToAdminRegister() {   
+    window.location.href = 'adminregister.html';
+}
+
+function togglePassword(inputId, toggleIconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(toggleIconId);
+    if (input.type === 'password') {
+        input.type = 'text';
+    } else {
+        input.type = 'password';
+      
+    }   
+}

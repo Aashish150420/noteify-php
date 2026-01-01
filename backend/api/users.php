@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include("../config/db.php");
+include 'config.php';
 
 $result = mysqli_query($conn, "SELECT user_id, name, email, role FROM users");
 $users = [];

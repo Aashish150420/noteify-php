@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include("../config/db.php");
+include 'config.php';
 
 $title = $_POST['title'];
 $description = $_POST['description'];

@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 
 $file = $_FILES['file'];
-$uploadDir = "../uploads/avatars/";
+$uploadDir = "../uploads/profilepics/";
 
 if (!file_exists($uploadDir)) {
     mkdir($uploadDir, 0777, true);

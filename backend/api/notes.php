@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include("../config/db.php");
+include 'config.php';
 
 $result = mysqli_query($conn, "SELECT n.*, u.name as author_name FROM notes n LEFT JOIN users u ON n.uploaded_by = u.user_id ORDER BY n.created_at DESC");
 $notes = [];
