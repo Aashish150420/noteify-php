@@ -1116,3 +1116,15 @@ function renderUserContributions() {
         </div>
     `).join('');
 }
+
+function goToRegister() {   
+    window.location.href = 'register.html';
+}
+
+function goToLogin() {   
+    window.location.href = 'index.html';
+}
+
+function goToAdminLogin() {
+    window.location.href = 'adminlogin.html';
+}
