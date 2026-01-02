@@ -183,11 +183,37 @@ body {
 }
 
 .form-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+    min-height: calc(100vh - 200px);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    overflow: hidden;
+}
+
+.form-container form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-container .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.form-container .page-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-container .page-header p {
+    color: var(--text-secondary);
 }
 
 /* App Wrapper */

@@ -2,16 +2,48 @@
 uploads/
 backend/uploads/
 
+# Image files (user uploads)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.bmp
+*.svg
+*.ico
+
+# Document files (user uploads)
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+*.txt
+
 # OS files
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-*
 
 # Logs
 *.log
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.#*
+
+# PHP specific
+*.cache
 

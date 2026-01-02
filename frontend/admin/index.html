@@ -75,6 +75,92 @@
         .btn-delete:hover {
             background: #b91c1c;
         }
+        .btn-activate {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-activate:hover {
+            background: #059669;
+        }
+        .btn-deactivate {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-deactivate:hover {
+            background: #d97706;
+        }
+        .btn-approve {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-approve:hover {
+            background: #059669;
+        }
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-reject:hover {
+            background: #dc2626;
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
         .empty-state {
             text-align: center;
             padding: 3rem;
@@ -103,6 +189,8 @@
             </div>
             <div class="nav-links">
                 <a href="#" class="nav-link active" data-page="dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+                <a href="#" class="nav-link" data-page="users"><i class="fa-solid fa-users"></i> Users</a>
+                <a href="#" class="nav-link" data-page="notes"><i class="fa-solid fa-book"></i> Notes</a>
                 <a href="#" class="nav-link" data-page="forum"><i class="fa-regular fa-comments"></i> Forum</a>
             </div>
             <div class="nav-user" style="cursor: pointer;" data-page="profile">
@@ -150,8 +238,8 @@
                     </div>
                 </div>
 
-                <!-- Notes Table -->
-                <div class="notes-table">
+                <!-- Recent Uploads Section -->
+                <div class="notes-table" style="margin-top: 2rem;">
                     <div class="table-header">
                         <div>Title</div>
                         <div>Author</div>
@@ -159,9 +247,74 @@
                         <div>Type</div>
                         <div>Views</div>
                         <div>Downloads</div>
+                        <div>Date</div>
+                    </div>
+                    <div id="recent-uploads-container">
+                        <div class="loading">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Loading recent uploads...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Management Page -->
+        <div id="users-page" class="page">
+            <div class="admin-container">
+                <div class="page-header">
+                    <div>
+                        <h1><i class="fa-solid fa-users"></i> User Management</h1>
+                        <p class="page-subtitle">View, activate, deactivate, and delete users</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="refreshUsers()">
+                        <i class="fa-solid fa-refresh"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="notes-table">
+                    <div class="table-header" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 0.8fr 0.8fr 2fr;">
+                        <div>Name</div>
+                        <div>Email</div>
+                        <div>Username</div>
+                        <div>Role</div>
+                        <div>Notes</div>
+                        <div>Status</div>
                         <div>Actions</div>
                     </div>
-                    <div id="notes-container">
+                    <div id="users-container">
+                        <div class="loading">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Loading users...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes Management Page -->
+        <div id="notes-page" class="page">
+            <div class="admin-container">
+                <div class="page-header">
+                    <div>
+                        <h1><i class="fa-solid fa-book"></i> Notes Management</h1>
+                        <p class="page-subtitle">Approve, reject, and manage uploaded notes</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="refreshNotesManagement()">
+                        <i class="fa-solid fa-refresh"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="notes-table">
+                    <div class="table-header" style="grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr 0.8fr 1fr 1.5fr;">
+                        <div>Title</div>
+                        <div>Author</div>
+                        <div>Course</div>
+                        <div>Type</div>
+                        <div>Views</div>
+                        <div>Downloads</div>
+                        <div>Status</div>
+                        <div>Actions</div>
+                    </div>
+                    <div id="notes-management-container">
                         <div class="loading">
                             <i class="fa-solid fa-spinner fa-spin"></i> Loading notes...
                         </div>
@@ -178,20 +331,49 @@
                         <h1><i class="fa-regular fa-comments"></i> Forum Management</h1>
                         <p class="page-subtitle">Manage forum posts and comments</p>
                     </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-secondary" onclick="showForumPosts()">
+                            <i class="fa-regular fa-comments"></i> Posts
+                        </button>
+                        <button class="btn btn-secondary" onclick="showForumComments()">
+                            <i class="fa-solid fa-comment-dots"></i> Comments
+                        </button>
+                    </div>
                 </div>
 
-                <div class="notes-table">
-                    <div class="table-header" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;">
-                        <div>Title</div>
-                        <div>Author</div>
-                        <div>Category</div>
-                        <div>Comments</div>
-                        <div>Date</div>
-                        <div>Actions</div>
+                <!-- Forum Posts Section -->
+                <div id="forum-posts-section">
+                    <div class="notes-table">
+                        <div class="table-header" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;">
+                            <div>Title</div>
+                            <div>Author</div>
+                            <div>Category</div>
+                            <div>Comments</div>
+                            <div>Date</div>
+                            <div>Actions</div>
+                        </div>
+                        <div id="forum-posts-container">
+                            <div class="loading">
+                                <i class="fa-solid fa-spinner fa-spin"></i> Loading forum posts...
+                            </div>
+                        </div>
                     </div>
-                    <div id="forum-posts-container">
-                        <div class="loading">
-                            <i class="fa-solid fa-spinner fa-spin"></i> Loading forum posts...
+                </div>
+
+                <!-- Forum Comments Section -->
+                <div id="forum-comments-section" style="display: none;">
+                    <div class="notes-table">
+                        <div class="table-header" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
+                            <div>Comment</div>
+                            <div>Author</div>
+                            <div>Post</div>
+                            <div>Date</div>
+                            <div>Actions</div>
+                        </div>
+                        <div id="forum-comments-container">
+                            <div class="loading">
+                                <i class="fa-solid fa-spinner fa-spin"></i> Loading comments...
+                            </div>
                         </div>
                     </div>
                 </div>

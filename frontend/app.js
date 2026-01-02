@@ -89,6 +89,23 @@ async function loadNotesFromAPI() {
         resources = data.map(note => {
             const authorName = note.author_name || 'Unknown';
             const isCurrentUser = authorName === userProfile.name;
+            
+            // Get author avatar - use profile_pic from database if available
+            let authorAvatar;
+            if (isCurrentUser) {
+                // For current user, always use their current profile avatar
+                authorAvatar = userProfile.avatar;
+            } else if (note.author_profile_pic && note.author_profile_pic !== 'default.png' && note.author_profile_pic !== 'uploads/default.png' && note.author_profile_pic.trim() !== '') {
+                // For other users, use their profile pic from database
+                // Build relative path from frontend/ to uploads/
+                // profile_pic is stored as "uploads/avatars/filename.jpg" in database
+                let picPath = note.author_profile_pic.replace(/^\/+/, ''); // Remove leading slashes
+                authorAvatar = `../${picPath}`;
+            } else {
+                // Fallback to generated avatar
+                authorAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName || 'User')}&background=a855f7&color=fff`;
+            }
+            
             return {
                 id: note.note_id,
                 title: note.title,
@@ -97,9 +114,7 @@ async function loadNotesFromAPI() {
                 type: note.type || 'notes',
                 year: note.year || new Date().getFullYear(),
                 author: authorName,
-                authorAvatar: isCurrentUser
-                    ? userProfile.avatar
-                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName || 'User')}&background=a855f7&color=fff`,
+                authorAvatar: authorAvatar,
                 downloads: note.downloads || 0,
                 views: note.views || 0,
                 date: note.created_at ? note.created_at.split(' ')[0] : new Date().toISOString().split('T')[0],
@@ -617,7 +632,7 @@ function renderForumPosts(category = 'all') {
     }
     
     container.innerHTML = filtered.map(post => `
-        <div class="forum-post" onclick="openPostDetail(${post.id})">
+        <div class="forum-post" data-post-id="${post.id}" style="cursor: pointer;">
             <div class="post-header">
                 <div class="post-user-info">
                     <img src="${getForumAvatar(post.author, post.authorAvatar)}" alt="${post.author}" class="user-avatar-small">
@@ -637,6 +652,24 @@ function renderForumPosts(category = 'all') {
             </div>
         </div>
     `).join('');
+    
+    // Add click event listeners to forum posts
+    container.querySelectorAll('.forum-post').forEach(postEl => {
+        postEl.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const postId = parseInt(this.getAttribute('data-post-id'));
+            console.log('Forum post clicked, ID:', postId);
+            if (postId && !isNaN(postId)) {
+                if (typeof openPostDetail === 'function') {
+                    openPostDetail(postId);
+                } else {
+                    console.error('openPostDetail function not found');
+                }
+            } else {
+                console.error('Invalid post ID:', postId);
+            }
+        });
+    });
 }
 
 function closePostModal() {
@@ -690,10 +723,27 @@ async function handleCreatePost() {
 }
 
 window.openPostDetail = function(id) {
-    currentPost = forumPosts.find(p => p.id === id);
-    if (!currentPost) return;
+    console.log('openPostDetail called with ID:', id);
+    console.log('Available forum posts:', forumPosts);
     
-    document.getElementById('post-detail-modal').classList.add('active');
+    // Try to find post by ID (handle both string and number IDs)
+    currentPost = forumPosts.find(p => p.id == id || p.id === parseInt(id));
+    
+    if (!currentPost) {
+        console.error('Post not found with ID:', id);
+        alert('Post not found. Please refresh the page.');
+        return;
+    }
+    
+    console.log('Found post:', currentPost);
+    
+    const modal = document.getElementById('post-detail-modal');
+    if (!modal) {
+        console.error('Post detail modal not found in DOM');
+        return;
+    }
+    
+    modal.classList.add('active');
     document.getElementById('post-detail-title').textContent = currentPost.title;
     document.getElementById('post-detail-avatar').src = getForumAvatar(currentPost.author, currentPost.authorAvatar);
     document.getElementById('post-detail-author').textContent = currentPost.author;

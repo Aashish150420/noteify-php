@@ -46,16 +46,66 @@ function switchPage(page) {
     
     // Load page-specific data
     if (page === 'dashboard') {
-        loadNotes();
+        loadRecentUploads();
         loadStats();
+    } else if (page === 'users') {
+        loadUsers();
+    } else if (page === 'notes') {
+        loadNotesManagement();
     } else if (page === 'forum') {
         loadForumPosts();
+        showForumPosts();
     } else if (page === 'profile') {
         loadProfile();
     }
 }
 
 // Dashboard Functions
+async function loadRecentUploads() {
+    try {
+        const response = await fetch('../../backend/api/admin/notes.php');
+        const notes = await response.json();
+        
+        // Get only recent 10 uploads
+        const recentNotes = notes.slice(0, 10);
+        
+        const container = document.getElementById('recent-uploads-container');
+        
+        if (!container) return;
+        
+        if (recentNotes.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox"></i><br>No recent uploads</div>';
+            return;
+        }
+        
+        container.innerHTML = recentNotes.map(note => {
+            const date = new Date(note.created_at);
+            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            return `
+            <div class="table-row" style="grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr 0.8fr 1fr;">
+                <div>
+                    <strong>${note.title || 'Untitled'}</strong>
+                    ${note.description ? `<br><small style="color: var(--text-secondary);">${note.description.substring(0, 50)}...</small>` : ''}
+                </div>
+                <div>${note.author_name || 'Unknown'}</div>
+                <div>${note.course || '-'}</div>
+                <div><span class="resource-type ${note.type || 'notes'}">${note.type || 'notes'}</span></div>
+                <div>${note.views || 0}</div>
+                <div>${note.downloads || 0}</div>
+                <div><small>${formattedDate}</small></div>
+            </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading recent uploads:', error);
+        const container = document.getElementById('recent-uploads-container');
+        if (container) {
+            container.innerHTML = '<div class="empty-state">Error loading recent uploads. Please refresh.</div>';
+        }
+    }
+}
+
 async function loadNotes() {
     try {
         const response = await fetch('../../backend/api/admin/notes.php');
@@ -133,10 +183,29 @@ async function deleteNote(noteId) {
 async function loadStats() {
     try {
         const notesResponse = await fetch('../../backend/api/admin/notes.php');
-        const notes = await notesResponse.json();
         
-        const totalViews = notes.reduce((sum, note) => sum + (parseInt(note.views) || 0), 0);
-        const totalDownloads = notes.reduce((sum, note) => sum + (parseInt(note.downloads) || 0), 0);
+        if (!notesResponse.ok) {
+            throw new Error(`HTTP error! status: ${notesResponse.status}`);
+        }
+        
+        const notesText = await notesResponse.text();
+        let notes;
+        try {
+            notes = JSON.parse(notesText);
+        } catch (e) {
+            console.error('Failed to parse notes JSON:', notesText);
+            throw new Error('Invalid JSON response from server');
+        }
+        
+        // Check if response is an error
+        if (notes.error) {
+            console.error('API error:', notes.error);
+            return;
+        }
+        
+        const notesArray = Array.isArray(notes) ? notes : [];
+        const totalViews = notesArray.reduce((sum, note) => sum + (parseInt(note.views) || 0), 0);
+        const totalDownloads = notesArray.reduce((sum, note) => sum + (parseInt(note.downloads) || 0), 0);
         
         const totalNotesEl = document.getElementById('total-notes');
         const totalViewsEl = document.getElementById('total-views');
@@ -144,24 +213,42 @@ async function loadStats() {
         const totalUsersEl = document.getElementById('total-users');
         const totalCommentsEl = document.getElementById('total-comments');
         
-        if (totalNotesEl) totalNotesEl.textContent = notes.length;
+        if (totalNotesEl) totalNotesEl.textContent = notesArray.length;
         if (totalViewsEl) totalViewsEl.textContent = totalViews;
         if (totalDownloadsEl) totalDownloadsEl.textContent = totalDownloads;
         
         const usersResponse = await fetch('../../backend/api/admin/users.php');
-        const users = await usersResponse.json();
-        if (totalUsersEl) totalUsersEl.textContent = users.length;
+        if (usersResponse.ok) {
+            const usersText = await usersResponse.text();
+            try {
+                const users = JSON.parse(usersText);
+                if (Array.isArray(users) && !users.error) {
+                    if (totalUsersEl) totalUsersEl.textContent = users.length;
+                }
+            } catch (e) {
+                console.error('Failed to parse users JSON:', usersText);
+            }
+        }
         
         const commentsResponse = await fetch('../../backend/api/admin/forum.php?type=comments');
-        const comments = await commentsResponse.json();
-        if (totalCommentsEl) totalCommentsEl.textContent = comments.length || 0;
+        if (commentsResponse.ok) {
+            const commentsText = await commentsResponse.text();
+            try {
+                const comments = JSON.parse(commentsText);
+                if (Array.isArray(comments) && !comments.error) {
+                    if (totalCommentsEl) totalCommentsEl.textContent = comments.length || 0;
+                }
+            } catch (e) {
+                console.error('Failed to parse comments JSON:', commentsText);
+            }
+        }
     } catch (error) {
         console.error('Error loading stats:', error);
     }
 }
 
 function refreshNotes() {
-    loadNotes();
+    loadRecentUploads();
     loadStats();
 }
 
@@ -205,6 +292,264 @@ window.downloadNote = function(filePath, fileName) {
         document.body.removeChild(link);
     }, 100);
 };
+
+// User Management Functions
+async function loadUsers() {
+    try {
+        const response = await fetch('../../backend/api/admin/users.php');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const responseText = await response.text();
+        let data;
+        
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error('Failed to parse JSON:', responseText);
+            throw new Error('Invalid JSON response from server. Check console for details.');
+        }
+        
+        // Check if response is an error
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        // Ensure data is an array
+        const users = Array.isArray(data) ? data : [];
+        
+        const container = document.getElementById('users-container');
+        if (!container) return;
+        
+        if (users.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox"></i><br>No users found</div>';
+            return;
+        }
+        
+        container.innerHTML = users.map(user => {
+            const isActive = user.status !== 'inactive'; // Default to active if no status field
+            const statusClass = isActive ? 'status-active' : 'status-inactive';
+            const statusText = isActive ? 'Active' : 'Inactive';
+            
+            return `
+                <div class="table-row" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 0.8fr 0.8fr 2fr;">
+                    <div>
+                        <strong>${user.fullname || 'Unknown'}</strong>
+                    </div>
+                    <div>${user.email || '-'}</div>
+                    <div>${user.username || '-'}</div>
+                    <div><span class="status-badge ${user.role === 'admin' ? 'status-active' : ''}">${user.role || 'user'}</span></div>
+                    <div>${user.notes_count || 0}</div>
+                    <div><span class="status-badge ${statusClass}">${statusText}</span></div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        ${isActive ? `
+                            <button class="btn-deactivate" onclick="toggleUserStatus(${user.id}, false)" title="Deactivate User">
+                                <i class="fa-solid fa-ban"></i> Deactivate
+                            </button>
+                        ` : `
+                            <button class="btn-activate" onclick="toggleUserStatus(${user.id}, true)" title="Activate User">
+                                <i class="fa-solid fa-check"></i> Activate
+                            </button>
+                        `}
+                        <button class="btn-delete" onclick="deleteUser(${user.id})" title="Delete User">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading users:', error);
+        const container = document.getElementById('users-container');
+        if (container) {
+            container.innerHTML = '<div class="empty-state">Error loading users. Please refresh.</div>';
+        }
+    }
+}
+
+async function toggleUserStatus(userId, activate) {
+    try {
+        const response = await fetch(`../../backend/api/admin/users.php`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                action: activate ? 'activate' : 'deactivate'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`User ${activate ? 'activated' : 'deactivated'} successfully!`);
+            loadUsers();
+        } else {
+            alert('Error: ' + (result.error || 'Failed to update user status'));
+        }
+    } catch (error) {
+        console.error('Error toggling user status:', error);
+        alert('Error updating user status. Please try again.');
+    }
+}
+
+async function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`../../backend/api/admin/users.php`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ user_id: userId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('User deleted successfully!');
+            loadUsers();
+            loadStats(); // Refresh stats
+        } else {
+            alert('Error: ' + (result.error || 'Failed to delete user'));
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Error deleting user. Please try again.');
+    }
+}
+
+function refreshUsers() {
+    loadUsers();
+    loadStats();
+}
+
+// Notes Management Functions
+async function loadNotesManagement() {
+    try {
+        const response = await fetch('../../backend/api/admin/notes.php');
+        const notes = await response.json();
+        
+        const container = document.getElementById('notes-management-container');
+        if (!container) return;
+        
+        if (notes.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox"></i><br>No notes found</div>';
+            return;
+        }
+        
+        container.innerHTML = notes.map(note => {
+            const status = note.status || 'approved'; // Default to approved if no status field
+            const statusClass = status === 'approved' ? 'status-approved' : (status === 'rejected' ? 'status-rejected' : 'status-pending');
+            const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+            
+            return `
+            <div class="table-row" style="grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr 0.8fr 1fr 1.5fr;">
+                <div>
+                    <strong>${note.title || 'Untitled'}</strong>
+                    ${note.description ? `<br><small style="color: var(--text-secondary);">${note.description.substring(0, 50)}...</small>` : ''}
+                </div>
+                <div>${note.author_name || 'Unknown'}</div>
+                <div>${note.course || '-'}</div>
+                <div><span class="resource-type ${note.type || 'notes'}">${note.type || 'notes'}</span></div>
+                <div>${note.views || 0}</div>
+                <div>${note.downloads || 0}</div>
+                <div><span class="status-badge ${statusClass}">${statusText}</span></div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    ${status !== 'approved' ? `
+                        <button class="btn-approve" onclick="approveNote(${note.note_id})" title="Approve Note">
+                            <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                    ` : ''}
+                    ${status !== 'rejected' ? `
+                        <button class="btn-reject" onclick="rejectNote(${note.note_id})" title="Reject Note">
+                            <i class="fa-solid fa-times"></i> Reject
+                        </button>
+                    ` : ''}
+                    <button class="btn-delete" onclick="deleteNote(${note.note_id})" title="Delete Note">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading notes management:', error);
+        const container = document.getElementById('notes-management-container');
+        if (container) {
+            container.innerHTML = '<div class="empty-state">Error loading notes. Please refresh.</div>';
+        }
+    }
+}
+
+async function approveNote(noteId) {
+    try {
+        const response = await fetch(`../../backend/api/admin/notes.php`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                note_id: noteId,
+                action: 'approve'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Note approved successfully!');
+            loadNotesManagement();
+        } else {
+            alert('Error: ' + (result.error || 'Failed to approve note'));
+        }
+    } catch (error) {
+        console.error('Error approving note:', error);
+        alert('Error approving note. Please try again.');
+    }
+}
+
+async function rejectNote(noteId) {
+    if (!confirm('Are you sure you want to reject this note?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`../../backend/api/admin/notes.php`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                note_id: noteId,
+                action: 'reject'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Note rejected successfully!');
+            loadNotesManagement();
+        } else {
+            alert('Error: ' + (result.error || 'Failed to reject note'));
+        }
+    } catch (error) {
+        console.error('Error rejecting note:', error);
+        alert('Error rejecting note. Please try again.');
+    }
+}
+
+function refreshNotesManagement() {
+    loadNotesManagement();
+    loadStats();
+}
 
 // Forum Functions
 async function loadForumPosts() {
@@ -251,6 +596,60 @@ async function loadForumPosts() {
     }
 }
 
+async function loadForumComments() {
+    try {
+        const response = await fetch('../../backend/api/admin/forum.php?type=comments');
+        const comments = await response.json();
+        
+        const container = document.getElementById('forum-comments-container');
+        if (!container) return;
+        
+        if (comments.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox"></i><br>No comments found</div>';
+            return;
+        }
+        
+        container.innerHTML = comments.map(comment => {
+            const date = new Date(comment.created_at);
+            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            return `
+                <div class="table-row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
+                    <div>
+                        <strong>${comment.text.substring(0, 100)}${comment.text.length > 100 ? '...' : ''}</strong>
+                    </div>
+                    <div>${comment.author_name || 'Unknown'}</div>
+                    <div><small>${comment.post_title || 'Unknown Post'}</small></div>
+                    <div><small>${formattedDate}</small></div>
+                    <div>
+                        <button class="btn-delete" onclick="deleteForumItem('comment', ${comment.id})">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading comments:', error);
+        const container = document.getElementById('forum-comments-container');
+        if (container) {
+            container.innerHTML = '<div class="empty-state">Error loading comments. Please refresh.</div>';
+        }
+    }
+}
+
+function showForumPosts() {
+    document.getElementById('forum-posts-section').style.display = 'block';
+    document.getElementById('forum-comments-section').style.display = 'none';
+    loadForumPosts();
+}
+
+function showForumComments() {
+    document.getElementById('forum-posts-section').style.display = 'none';
+    document.getElementById('forum-comments-section').style.display = 'block';
+    loadForumComments();
+}
+
 async function deleteForumItem(type, id) {
     const itemName = type === 'post' ? 'post' : 'comment';
     if (!confirm(`Are you sure you want to delete this ${itemName}? This action cannot be undone.`)) {
@@ -270,7 +669,11 @@ async function deleteForumItem(type, id) {
         
         if (result.success) {
             alert(`${itemName.charAt(0).toUpperCase() + itemName.slice(1)} deleted successfully!`);
-            loadForumPosts();
+            if (type === 'post') {
+                loadForumPosts();
+            } else {
+                loadForumComments();
+            }
         } else {
             alert('Error: ' + (result.error || 'Failed to delete'));
         }

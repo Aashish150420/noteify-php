@@ -1,41 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="cssfiles/styles.css">
-<title>NOTEIFY Admin Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="cssfiles/styles.css">
+    <title>NOTEIFY - Admin Login</title>
 </head>
 <body>
-<nav class="navbar">
+    <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
                 <span class="brand-icon"><i class="fa-solid fa-book"></i></span>
-                <span class="brand-name">NOTEIFY</span>
+                <span class="brand-name">NOTEIFY - Admin</span>
             </div>
         </div>
     </nav>
-<div class="form-container">
-      <div class="page-header">
-        <h1 class="page-header">Admin Login</h1>
-    </div>
-  <form action="../backend/login.php" method="POST" onsubmit="return validateLogin()">
-    <div class="form-group">
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required>
-    </div>
+    
+    <div class="form-container">
+        <div class="page-header">
+            <h1><i class="fa-solid fa-shield-halved"></i> Admin Login</h1>
+            <p class="page-subtitle">Administrator access to NOTEIFY</p>
+        </div>
+        
+        <form action="../backend/login.php" method="POST" onsubmit="return validateLogin()">
+            <div class="form-group">
+                <label for="username"><i class="fa-solid fa-user"></i> Username</label>
+                <input type="text" id="username" name="username" class="form-input" placeholder="Enter admin username" required>
+            </div>
 
-    <div class="form-group">
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required>
-      <input type="checkbox" onclick="togglePassword('password')"> Show Password
-    </div>
+            <div class="form-group">
+                <label for="password"><i class="fa-solid fa-lock"></i> Password</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="Enter admin password" required>
+            </div>
 
-    <button type="submit" class="btn btn-primary">Login</button>
-    <p style="cursor: pointer; color: var(--primary-purple); text-decoration: underline;" onclick="window.location.href='index.html'">Not an Admin? Click here</p>
-  </form>
-</div>
-<script src= "app.js"></script>
+            <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" id="showPass" onclick="togglePassword('password')" style="width: auto;">
+                <label for="showPass" style="margin: 0; font-weight: normal;">Show Password</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+                <i class="fa-solid fa-shield-halved"></i> Admin Login
+            </button>
+            
+            <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <button type="button" onclick="window.location.href='index.html'" class="btn btn-secondary" style="width: 100%;">
+                    <i class="fa-solid fa-arrow-left"></i> Back to User Login
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <script src="app.js"></script>
 </body>
 </html>
