@@ -17,7 +17,6 @@ A full-stack web application for sharing college notes and resources with user a
 - ✅ Forum discussions with categories and comments
 - ✅ User profiles with avatar uploads and bio
 - ✅ Filter and search resources by course, type, and year
-- ✅ Study rooms (chat functionality)
 - ✅ View statistics (views, downloads)
 - ✅ Click on forum posts to view details and comments
 - ✅ View profile pictures of all users in notes

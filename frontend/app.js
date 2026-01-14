@@ -1,9 +1,4 @@
 // Constants
-const ROOM_COLORS = [
-    '#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', 
-    '#06b6d4', '#ef4444', '#84cc16', '#f43f5e', '#14b8a6'
-];
-
 const CATEGORY_ICONS = {
     homework: '<i class="fa-solid fa-pencil"></i>',
     exams: '<i class="fa-solid fa-chart-column"></i>',
@@ -17,8 +12,6 @@ let currentPage = 'notes';
 let viewMode = 'cards'; // 'cards' or 'list'
 let resources = [];
 let forumPosts = [];
-let rooms = [];
-let currentRoom = null;
 let currentPost = null;
 let currentComments = [];
 let userProfile = {
@@ -58,10 +51,6 @@ function persistUserProfile() {
     }
 }
 
-// Mock chat messages
-let chatMessages = [];
-let chatInterval = null;
-
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     initializeNavigation();
@@ -71,9 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadViewMode(); // Load saved view mode
     loadNotesFromAPI();
     loadForumPostsFromAPI();
-    renderRooms();
-    updateRoomTimers();
-    setInterval(updateRoomTimers, 60000); // Update timers every minute
 });
 
 // Load notes from API
@@ -218,37 +204,6 @@ function initializeModals() {
     if (cancelPostBtn) cancelPostBtn.addEventListener('click', closePostModal);
     const submitPostBtn = document.getElementById('submit-post-btn');
     if (submitPostBtn) submitPostBtn.addEventListener('click', handleCreatePost);
-    
-    // Room Modal
-    const createRoomBtn = document.getElementById('create-room-btn');
-    if (createRoomBtn) {
-        createRoomBtn.addEventListener('click', () => {
-            const modal = document.getElementById('room-modal');
-            if (modal) {
-                modal.classList.add('active');
-                renderRoomColorPicker();
-            }
-        });
-    }
-    
-    const closeRoomBtn = document.getElementById('close-room-modal');
-    if (closeRoomBtn) closeRoomBtn.addEventListener('click', closeRoomModal);
-    const cancelRoomBtn = document.getElementById('cancel-room-btn');
-    if (cancelRoomBtn) cancelRoomBtn.addEventListener('click', closeRoomModal);
-    const submitRoomBtn = document.getElementById('submit-room-btn');
-    if (submitRoomBtn) submitRoomBtn.addEventListener('click', handleCreateRoom);
-    
-    // Chat Modal
-    const closeChatBtn = document.getElementById('close-chat-modal');
-    if (closeChatBtn) closeChatBtn.addEventListener('click', closeChatModal);
-    const sendMessageBtn = document.getElementById('send-message-btn');
-    if (sendMessageBtn) sendMessageBtn.addEventListener('click', sendMessage);
-    const chatInput = document.getElementById('chat-input');
-    if (chatInput) {
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-    }
     
     // Post Detail Modal
     const closePostDetailBtn = document.getElementById('close-post-detail-modal');
@@ -865,277 +820,6 @@ function getForumAvatar(authorName, storedAvatar) {
     // Fallback: auto-generated avatar based on author name
     const name = authorName || 'User';
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=a855f7&color=fff`;
-}
-
-// Study Rooms
-function renderRooms() {
-    const activeContainer = document.getElementById('active-rooms');
-    const yourContainer = document.getElementById('your-rooms');
-    
-    const activeRooms = rooms.filter(room => room.owner !== userProfile.name);
-    const yourRooms = rooms.filter(room => room.owner === userProfile.name);
-    
-    activeContainer.innerHTML = activeRooms.length > 0 
-        ? activeRooms.map(room => createRoomCard(room)).join('')
-        : '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No active rooms at the moment.</p>';
-    
-    yourContainer.innerHTML = yourRooms.length > 0
-        ? yourRooms.map(room => createRoomCard(room)).join('')
-        : '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">You haven\'t created any rooms yet.</p>';
-}
-
-function createRoomCard(room) {
-    const isFull = room.currentParticipants >= room.maxParticipants;
-    const timeRemaining = getTimeRemaining(room.expiresAt);
-    
-    return `
-        <div class="room-card" style="border-color: ${room.color};">
-            <div class="room-header">
-                <div>
-                    <h3 class="room-name">${room.name}</h3>
-                    <span class="room-status ${isFull ? 'full' : 'active'}">
-                        ${isFull ? '<i class="fa-solid fa-circle-xmark"></i> Full' : '<i class="fa-solid fa-circle-check"></i> Active'}
-                    </span>
-                </div>
-            </div>
-            <p class="room-description">${room.description}</p>
-            <div class="room-info">
-                <span><i class="fa-solid fa-user-group"></i> ${room.currentParticipants}/${room.maxParticipants}</span>
-                <span><i class="fa-regular fa-clock"></i> ${timeRemaining}</span>
-                <span><i class="fa-solid fa-lock"></i> ${room.privacy === 'public' ? 'Public' : 'Private'}</span>
-            </div>
-            <div class="room-participants">
-                ${room.participants.slice(0, 3).map(p => 
-                    `<img src="${p.avatar}" alt="${p.name}" title="${p.name}">`
-                ).join('')}
-                ${room.participants.length > 3 ? `<span style="margin-left: 0.5rem;">+${room.participants.length - 3} more</span>` : ''}
-            </div>
-            <div class="room-footer">
-                ${!isFull ? `<button class="btn btn-primary" onclick="joinRoom(${room.id})"><i class="fa-solid fa-door-open"></i> Join Room</button>` : ''}
-                <button class="btn btn-secondary" onclick="viewRoomDetails(${room.id})"><i class="fa-regular fa-eye"></i> View</button>
-            </div>
-        </div>
-    `;
-}
-
-function getTimeRemaining(expiresAt) {
-    const diff = expiresAt - Date.now();
-    if (diff <= 0) return 'Expired';
-    
-    const hours = Math.floor(diff / 3600000);
-    const minutes = Math.floor((diff % 3600000) / 60000);
-    
-    if (hours > 0) return `${hours}h ${minutes}m left`;
-    return `${minutes}m left`;
-}
-
-function updateRoomTimers() {
-    rooms = rooms.filter(room => room.expiresAt > Date.now());
-    renderRooms();
-}
-
-function closeRoomModal() {
-    document.getElementById('room-modal').classList.remove('active');
-    document.getElementById('room-name').value = '';
-    document.getElementById('room-description').value = '';
-}
-
-function renderRoomColorPicker() {
-    const container = document.getElementById('room-color-picker');
-    container.innerHTML = ROOM_COLORS.map(color => `
-        <div class="color-option" style="background: ${color};" data-color="${color}" 
-             onclick="selectRoomColor('${color}')"></div>
-    `).join('');
-    
-    // Select first color by default
-    selectRoomColor(ROOM_COLORS[0]);
-}
-
-window.selectRoomColor = function(color) {
-    document.querySelectorAll('#room-color-picker .color-option').forEach(opt => {
-        opt.classList.toggle('selected', opt.dataset.color === color);
-    });
-};
-
-function handleCreateRoom() {
-    const name = document.getElementById('room-name').value.trim();
-    const description = document.getElementById('room-description').value.trim();
-    const maxParticipants = parseInt(document.getElementById('room-max').value);
-    const duration = parseInt(document.getElementById('room-duration').value);
-    const privacy = document.getElementById('room-privacy').value;
-    const color = document.querySelector('#room-color-picker .color-option.selected')?.dataset.color || ROOM_COLORS[0];
-    
-    if (!name || !description) {
-        alert('Please fill in all required fields');
-        return;
-    }
-    
-    if (maxParticipants < 2 || maxParticipants > 50) {
-        alert('Max participants must be between 2 and 50');
-        return;
-    }
-    
-    if (duration < 1 || duration > 24) {
-        alert('Duration must be between 1 and 24 hours');
-        return;
-    }
-    
-    // Generate unique ID
-    const newId = rooms.length > 0 ? Math.max(...rooms.map(r => r.id)) + 1 : 1;
-    
-    const newRoom = {
-        id: newId,
-        name,
-        description,
-        maxParticipants,
-        currentParticipants: 1,
-        duration: `${duration} hours`,
-        expiresAt: Date.now() + (duration * 3600000),
-        privacy,
-        color,
-        owner: userProfile.name,
-        participants: [
-            { name: userProfile.name, avatar: userProfile.avatar }
-        ]
-    };
-    
-    rooms.unshift(newRoom);
-    closeRoomModal();
-    renderRooms();
-    alert('Room created successfully!');
-}
-
-window.joinRoom = function(id) {
-    const room = rooms.find(r => r.id === id);
-    if (!room) {
-        alert('Room not found!');
-        return;
-    }
-    
-    // Check if already joined
-    const alreadyJoined = room.participants.some(p => p.name === userProfile.name);
-    if (alreadyJoined) {
-        openChatRoom(id);
-        return;
-    }
-    
-    if (room.currentParticipants >= room.maxParticipants) {
-        alert('This room is full!');
-        return;
-    }
-    
-    // Check if room expired
-    if (room.expiresAt <= Date.now()) {
-        alert('This room has expired!');
-        return;
-    }
-    
-    room.currentParticipants++;
-    room.participants.push({
-        name: userProfile.name,
-        avatar: userProfile.avatar
-    });
-    
-    renderRooms();
-    openChatRoom(id);
-    alert('Successfully joined the room!');
-};
-
-window.viewRoomDetails = function(id) {
-    const room = rooms.find(r => r.id === id);
-    if (!room) {
-        alert('Room not found!');
-        return;
-    }
-    openChatRoom(id);
-};
-
-function openChatRoom(id) {
-    currentRoom = rooms.find(r => r.id === id);
-    if (!currentRoom) {
-        alert('Room not found!');
-        return;
-    }
-    
-    // Check if room expired
-    if (currentRoom.expiresAt <= Date.now()) {
-        alert('This room has expired!');
-        return;
-    }
-    
-    document.getElementById('chat-modal').classList.add('active');
-    document.getElementById('chat-room-name').textContent = currentRoom.name;
-    document.getElementById('chat-room-info').textContent = `${currentRoom.description} • ${currentRoom.currentParticipants} participants`;
-    
-    renderParticipants();
-    initializeMockChat();
-}
-
-function closeChatModal() {
-    document.getElementById('chat-modal').classList.remove('active');
-    if (chatInterval) {
-        clearInterval(chatInterval);
-        chatInterval = null;
-    }
-    chatMessages = [];
-    currentRoom = null;
-}
-
-function renderParticipants() {
-    if (!currentRoom) return;
-    
-    document.getElementById('participant-count').textContent = currentRoom.participants.length;
-    
-    const container = document.getElementById('participants-list');
-    container.innerHTML = currentRoom.participants.map(p => `
-        <div class="participant-item">
-            <img src="${p.avatar}" alt="${p.name}">
-            <span>${p.name}</span>
-        </div>
-    `).join('');
-}
-
-function initializeMockChat() {
-    // Initialize empty chat - users can start chatting
-    chatMessages = [];
-    renderChatMessages();
-}
-
-function renderChatMessages() {
-    const container = document.getElementById('chat-messages');
-    container.innerHTML = chatMessages.map(msg => `
-        <div class="chat-message ${msg.isOwn ? 'own' : ''}">
-            <img src="${msg.avatar}" alt="${msg.author}">
-            <div class="message-content">
-                ${!msg.isOwn ? `<div class="message-author">${msg.author}</div>` : ''}
-                <div class="message-text">${msg.text}</div>
-                <div class="message-time">${msg.time}</div>
-            </div>
-        </div>
-    `).join('');
-    
-    container.scrollTop = container.scrollHeight;
-}
-
-function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-    
-    if (!text) return;
-    
-    const now = new Date();
-    const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    
-    chatMessages.push({
-        author: userProfile.name,
-        avatar: userProfile.avatar,
-        text,
-        time,
-        isOwn: true
-    });
-    
-    input.value = '';
-    renderChatMessages();
 }
 
 // Profile

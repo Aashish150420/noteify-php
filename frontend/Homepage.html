@@ -18,7 +18,6 @@
             <div class="nav-links">
                 <a href="#" class="nav-link active" data-page="notes"><i class="fa-solid fa-book-open"></i> Notes</a>
                 <a href="#" class="nav-link" data-page="forum"><i class="fa-regular fa-comments"></i> Forum</a>
-                <a href="#" class="nav-link" data-page="rooms"><i class="fa-solid fa-door-open"></i> Study Rooms</a>
             </div>
             <div class="nav-user" style="cursor: pointer;" onclick="switchPage('profile')">
                 <img src="https://ui-avatars.com/api/?name=Student+User&background=a855f7&color=fff" alt="User" class="user-avatar-small">
@@ -168,33 +167,6 @@
 
             <!-- Forum Posts -->
             <div id="forum-posts" class="forum-posts"></div>
-        </div>
-
-        <!-- Study Rooms Page -->
-        <div id="rooms-page" class="page">
-            <div class="page-header">
-                <div>
-                    <h1><i class="fa-solid fa-door-open"></i> Study Rooms</h1>
-                    <p class="page-subtitle">Create or join private study rooms for group discussions</p>
-                </div>
-                <button class="btn btn-primary" id="create-room-btn">
-                    <i class="fa-solid fa-plus"></i> Create Room
-                </button>
-            </div>
-
-            <div class="rooms-container">
-                <!-- Active Rooms -->
-                <div class="rooms-section">
-                    <h2><i class="fa-solid fa-fire"></i> Active Rooms</h2>
-                    <div id="active-rooms" class="rooms-grid"></div>
-                </div>
-
-                <!-- Your Rooms -->
-                <div class="rooms-section">
-                    <h2><i class="fa-solid fa-user-group"></i> Your Rooms</h2>
-                    <div id="your-rooms" class="rooms-grid"></div>
-                </div>
-            </div>
         </div>
 
         <!-- Profile Page -->
@@ -419,75 +391,6 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="cancel-post-btn">Cancel</button>
                 <button class="btn btn-primary" id="submit-post-btn"><i class="fa-solid fa-paper-plane"></i> Post</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Create Room Modal -->
-    <div id="room-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fa-solid fa-plus"></i> Create Study Room</h2>
-                <button class="modal-close" id="close-room-modal"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label><i class="fa-solid fa-tag"></i> Room Name</label>
-                    <input type="text" id="room-name" class="form-input" placeholder="e.g., Calculus Study Group">
-                </div>
-                <div class="form-group">
-                    <label><i class="fa-regular fa-pen-to-square"></i> Description</label>
-                    <textarea id="room-description" class="form-textarea" rows="3" placeholder="What's this room about?"></textarea>
-                </div>
-                <div class="form-group">
-                    <label><i class="fa-solid fa-user-group"></i> Max Participants</label>
-                    <input type="number" id="room-max" class="form-input" value="10" min="2" max="50">
-                </div>
-                <div class="form-group">
-                    <label><i class="fa-regular fa-clock"></i> Duration (hours)</label>
-                    <input type="number" id="room-duration" class="form-input" value="2" min="1" max="24">
-                </div>
-                <div class="form-group">
-                    <label><i class="fa-solid fa-lock"></i> Privacy</label>
-                    <select id="room-privacy" class="form-input">
-                        <option value="public">Public (Anyone can join)</option>
-                        <option value="private">Private (Invite only)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label><i class="fa-solid fa-palette"></i> Theme Color</label>
-                    <div class="color-picker-grid" id="room-color-picker"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancel-room-btn">Cancel</button>
-                <button class="btn btn-primary" id="submit-room-btn"><i class="fa-solid fa-rocket"></i> Create Room</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Room Chat Modal -->
-    <div id="chat-modal" class="modal">
-        <div class="modal-content modal-large">
-            <div class="modal-header">
-                <div>
-                    <h2 id="chat-room-name">Study Room</h2>
-                    <p class="chat-room-info" id="chat-room-info"></p>
-                </div>
-                <button class="modal-close" id="close-chat-modal"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="chat-container">
-                <div class="chat-sidebar">
-                    <h3><i class="fa-solid fa-user-group"></i> Participants (<span id="participant-count">0</span>)</h3>
-                    <div id="participants-list" class="participants-list"></div>
-                </div>
-                <div class="chat-main">
-                    <div id="chat-messages" class="chat-messages"></div>
-                    <div class="chat-input-container">
-                        <input type="text" id="chat-input" class="chat-input" placeholder="Type a message...">
-                        <button class="btn btn-primary" id="send-message-btn"><i class="fa-solid fa-paper-plane"></i> Send</button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

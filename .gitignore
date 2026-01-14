@@ -47,3 +47,10 @@ desktop.ini
 # PHP specific
 *.cache
 
+# Chapter documentation files
+Chapter*.md
+Final_Project_Report_Complete.md
+Mid_Project_Report_Complete.md
+VIVA_preparation_guide.md
+Mid_Defense_Content.md
+create_admin.php
